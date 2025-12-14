@@ -91,7 +91,7 @@ declare global {
 
   interface ApplicationCardProps {
     application: Application;
-    userType: "manager" | "renter";
+    userType: "admin" | "user";
     children: React.ReactNode;
   }
 
@@ -121,18 +121,18 @@ declare global {
   }
 
   interface AppSidebarProps {
-    userType: "manager" | "tenant";
+    userType: "admin" | "user";
   }
 
   interface SettingsFormProps {
     initialData: SettingsFormData;
     onSubmit: (data: SettingsFormData) => Promise<void>;
-    userType: "manager" | "tenant";
+    userType: "admin" | "user";
   }
 
   interface User {
     cognitoInfo: AuthUser;
-    userInfo: Tenant | Manager;
+    userInfo: User | Admin;
     userRole: JsonObject | JsonPrimitive | JsonArray;
   }
 }

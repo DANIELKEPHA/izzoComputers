@@ -79,13 +79,12 @@ async function main() {
   const dataDirectory = path.join(__dirname, "seedData");
 
   const orderedFileNames = [
-    "location.json", // No dependencies
-    "manager.json", // No dependencies
-    "property.json", // Depends on location and manager
-    "tenant.json", // No dependencies
-    "lease.json", // Depends on property and tenant
-    "application.json", // Depends on property and tenant
-    "payment.json", // Depends on lease
+    "location.json",
+    "admin.json",
+    "product.json",
+    "user.json",
+    "cart.json",
+    "payment.json",
   ];
 
   // Delete all existing data

@@ -3,8 +3,8 @@ import React, { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useAppSelector } from "@/state/redux";
-import { useGetPropertiesQuery } from "@/state/api";
-import { Property } from "@/types/prismaTypes";
+import { useGetProductsQuery } from "@/state/api";
+import { Product } from "@/types/prismaTypes";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN as string;
 
@@ -15,7 +15,7 @@ const Map = () => {
     data: properties,
     isLoading,
     isError,
-  } = useGetPropertiesQuery(filters);
+  } = useGetProductsQuery(filters);
 
   useEffect(() => {
     if (isLoading || isError || !properties) return;
@@ -27,8 +27,8 @@ const Map = () => {
       zoom: 9,
     });
 
-    properties.forEach((property) => {
-      const marker = createPropertyMarker(property, map);
+    properties.forEach((products) => {
+      const marker = createProductMarker(products, map);
       const markerElement = marker.getElement();
       const path = markerElement.querySelector("path[fill='#3FB1CE']");
       if (path) path.setAttribute("fill", "#000000");

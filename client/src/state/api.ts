@@ -1,15 +1,8 @@
 import { cleanParams, createNewUserInDatabase, withToast } from "@/lib/utils";
-import {
-  Application,
-  Lease,
-  Manager,
-  Payment,
-  Property,
-  Tenant,
-} from "@/types/prismaTypes";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 import { FiltersState } from ".";
+import {Admin, User, Product} from "@/types/prismaTypes";
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
@@ -25,13 +18,11 @@ export const api = createApi({
   }),
   reducerPath: "api",
   tagTypes: [
-    "Managers",
-    "Tenants",
-    "Properties",
-    "PropertyDetails",
-    "Leases",
-    "Payments",
-    "Applications",
+    "Admin",
+    "Users",
+    "Products",
+    "ProductDetails",
+    "Categories",
   ],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
@@ -43,9 +34,9 @@ export const api = createApi({
           const userRole = idToken?.payload["custom:role"] as string;
 
           const endpoint =
-            userRole === "manager"
-              ? `/managers/${user.userId}`
-              : `/tenants/${user.userId}`;
+            userRole === "admin"
+              ? `/admins/${user.userId}`
+              : `/users/${user.userId}`;
 
           let userDetailsResponse = await fetchWithBQ(endpoint);
 
@@ -65,7 +56,7 @@ export const api = createApi({
           return {
             data: {
               cognitoInfo: { ...user },
-              userInfo: userDetailsResponse.data as Tenant | Manager,
+              userInfo: userDetailsResponse.data as User | Admin,
               userRole,
             },
           };
@@ -75,91 +66,27 @@ export const api = createApi({
       },
     }),
 
-    // property related endpoints
-    getProperties: build.query<
-      Property[],
-      Partial<FiltersState> & { favoriteIds?: number[] }
+    // user related endpoints
+    getUser: build.query<User, string>({
+      query: (cognitoId) => `users/${cognitoId}`,
+      providesTags: (result) => [{ type: "Users", id: result?.id }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load user profile.",
+        });
+      },
+    }),
+
+    updateUserSettings: build.mutation<
+      User,
+      { cognitoId: string } & Partial<User>
     >({
-      query: (filters) => {
-        const params = cleanParams({
-          location: filters.location,
-          priceMin: filters.priceRange?.[0],
-          priceMax: filters.priceRange?.[1],
-          beds: filters.beds,
-          baths: filters.baths,
-          propertyType: filters.propertyType,
-          squareFeetMin: filters.squareFeet?.[0],
-          squareFeetMax: filters.squareFeet?.[1],
-          amenities: filters.amenities?.join(","),
-          availableFrom: filters.availableFrom,
-          favoriteIds: filters.favoriteIds?.join(","),
-          latitude: filters.coordinates?.[1],
-          longitude: filters.coordinates?.[0],
-        });
-
-        return { url: "properties", params };
-      },
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: "Properties" as const, id })),
-              { type: "Properties", id: "LIST" },
-            ]
-          : [{ type: "Properties", id: "LIST" }],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to fetch properties.",
-        });
-      },
-    }),
-
-    getProperty: build.query<Property, number>({
-      query: (id) => `properties/${id}`,
-      providesTags: (result, error, id) => [{ type: "PropertyDetails", id }],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to load property details.",
-        });
-      },
-    }),
-
-    // tenant related endpoints
-    getTenant: build.query<Tenant, string>({
-      query: (cognitoId) => `tenants/${cognitoId}`,
-      providesTags: (result) => [{ type: "Tenants", id: result?.id }],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to load tenant profile.",
-        });
-      },
-    }),
-
-    getCurrentResidences: build.query<Property[], string>({
-      query: (cognitoId) => `tenants/${cognitoId}/current-residences`,
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: "Properties" as const, id })),
-              { type: "Properties", id: "LIST" },
-            ]
-          : [{ type: "Properties", id: "LIST" }],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to fetch current residences.",
-        });
-      },
-    }),
-
-    updateTenantSettings: build.mutation<
-      Tenant,
-      { cognitoId: string } & Partial<Tenant>
-    >({
-      query: ({ cognitoId, ...updatedTenant }) => ({
-        url: `tenants/${cognitoId}`,
+      query: ({ cognitoId, ...updatedUser }) => ({
+        url: `users/${cognitoId}`,
         method: "PUT",
-        body: updatedTenant,
+        body: updatedUser,
       }),
-      invalidatesTags: (result) => [{ type: "Tenants", id: result?.id }],
+      invalidatesTags: (result) => [{ type: "Users", id: result?.id }],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           success: "Settings updated successfully!",
@@ -168,17 +95,17 @@ export const api = createApi({
       },
     }),
 
-    addFavoriteProperty: build.mutation<
-      Tenant,
+    addFavoriteProduct: build.mutation<
+      User,
       { cognitoId: string; propertyId: number }
     >({
       query: ({ cognitoId, propertyId }) => ({
-        url: `tenants/${cognitoId}/favorites/${propertyId}`,
+        url: `users/${cognitoId}/favorites/${propertyId}`,
         method: "POST",
       }),
       invalidatesTags: (result) => [
-        { type: "Tenants", id: result?.id },
-        { type: "Properties", id: "LIST" },
+        { type: "Users", id: result?.id },
+        { type: "Products", id: "LIST" },
       ],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
@@ -188,17 +115,17 @@ export const api = createApi({
       },
     }),
 
-    removeFavoriteProperty: build.mutation<
-      Tenant,
-      { cognitoId: string; propertyId: number }
+    removeFavoriteProduct: build.mutation<
+      User,
+      { cognitoId: string; productId: number }
     >({
-      query: ({ cognitoId, propertyId }) => ({
-        url: `tenants/${cognitoId}/favorites/${propertyId}`,
+      query: ({ cognitoId, productId }) => ({
+        url: `users/${cognitoId}/favorites/${productId}`,
         method: "DELETE",
       }),
       invalidatesTags: (result) => [
-        { type: "Tenants", id: result?.id },
-        { type: "Properties", id: "LIST" },
+        { type: "Users", id: result?.id },
+        { type: "Products", id: "LIST" },
       ],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
@@ -208,165 +135,231 @@ export const api = createApi({
       },
     }),
 
-    // manager related endpoints
-    getManagerProperties: build.query<Property[], string>({
-      query: (cognitoId) => `managers/${cognitoId}/properties`,
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: "Properties" as const, id })),
-              { type: "Properties", id: "LIST" },
-            ]
-          : [{ type: "Properties", id: "LIST" }],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to load manager profile.",
-        });
-      },
-    }),
-
-    updateManagerSettings: build.mutation<
-      Manager,
-      { cognitoId: string } & Partial<Manager>
-    >({
-      query: ({ cognitoId, ...updatedManager }) => ({
-        url: `managers/${cognitoId}`,
-        method: "PUT",
-        body: updatedManager,
+    // admin related endpoints
+      getProduct: build.query<Product, number>({
+          query: (id) => `products/${id}`,
+          providesTags: (result) =>
+              result
+                  ? [
+                      { type: "ProductDetails", id: result.id },
+                      { type: "Products", id: result.id },
+                      { type: "Products", id: "LIST" },
+                  ]
+                  : [{ type: "Products", id: "LIST" }],
       }),
-      invalidatesTags: (result) => [{ type: "Managers", id: result?.id }],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          success: "Settings updated successfully!",
-          error: "Failed to update settings.",
-        });
-      },
-    }),
 
-    createProperty: build.mutation<Property, FormData>({
-      query: (newProperty) => ({
-        url: `properties`,
-        method: "POST",
-        body: newProperty,
+      // In your api endpoints
+      getProducts: build.query<
+          { products: Product[]; total: number },  // ← Return object with total
+          {
+              search?: string;
+              categoryId?: number;
+              page?: number;
+              pageSize?: number;
+          }
+      >({
+          query: ({ search, categoryId, page = 1, pageSize = 20 }) => ({
+              url: "products",
+              params: {
+                  search: search || undefined,
+                  categoryId: categoryId || undefined,
+                  page,
+                  pageSize,
+              },
+          }),
+          providesTags: (result) =>
+              result
+                  ? [
+                      ...result.products.map(({ id }) => ({ type: "Products" as const, id })),
+                      { type: "Products", id: "LIST" },
+                  ]
+                  : [{ type: "Products", id: "LIST" }],
       }),
-      invalidatesTags: (result) => [
-        { type: "Properties", id: "LIST" },
-        { type: "Managers", id: result?.manager?.id },
-      ],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          success: "Property created successfully!",
-          error: "Failed to create property.",
-        });
-      },
-    }),
 
-    // lease related enpoints
-    getLeases: build.query<Lease[], number>({
-      query: () => "leases",
-      providesTags: ["Leases"],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to fetch leases.",
-        });
-      },
-    }),
-
-    getPropertyLeases: build.query<Lease[], number>({
-      query: (propertyId) => `properties/${propertyId}/leases`,
-      providesTags: ["Leases"],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to fetch property leases.",
-        });
-      },
-    }),
-
-    getPayments: build.query<Payment[], number>({
-      query: (leaseId) => `leases/${leaseId}/payments`,
-      providesTags: ["Payments"],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to fetch payment info.",
-        });
-      },
-    }),
-
-    // application related endpoints
-    getApplications: build.query<
-      Application[],
-      { userId?: string; userType?: string }
-    >({
-      query: (params) => {
-        const queryParams = new URLSearchParams();
-        if (params.userId) {
-          queryParams.append("userId", params.userId.toString());
-        }
-        if (params.userType) {
-          queryParams.append("userType", params.userType);
-        }
-
-        return `applications?${queryParams.toString()}`;
-      },
-      providesTags: ["Applications"],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          error: "Failed to fetch applications.",
-        });
-      },
-    }),
-
-    updateApplicationStatus: build.mutation<
-      Application & { lease?: Lease },
-      { id: number; status: string }
-    >({
-      query: ({ id, status }) => ({
-        url: `applications/${id}/status`,
-        method: "PUT",
-        body: { status },
+      getCategories: build.query<{ id: number; name: string }[], void>({
+          query: () => "products/categories",
+          providesTags: ["Categories"],
       }),
-      invalidatesTags: ["Applications", "Leases"],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          success: "Application status updated successfully!",
-          error: "Failed to update application settings.",
-        });
-      },
-    }),
 
-    createApplication: build.mutation<Application, Partial<Application>>({
-      query: (body) => ({
-        url: `applications`,
-        method: "POST",
-        body: body,
+      createProduct: build.mutation<
+          Product,
+          {
+              name: string;
+              description: string;
+              price: string | number;
+              stock: number;
+              categoryId: number;
+              images?: File[];
+              specs?: string;
+          }
+      >({
+          query: (productData) => {
+              const formData = new FormData();
+
+              formData.append("name", productData.name);
+              formData.append("description", productData.description);
+              formData.append("price", productData.price.toString());
+              formData.append("stock", productData.stock.toString());
+              formData.append("categoryId", productData.categoryId.toString());
+
+              // Append images (multer will collect under req.files)
+              productData.images?.forEach((image) => {
+                  formData.append("images", image); // ← Keep as "files" to match your backend (req.files)
+              });
+
+              // Append dynamic specs as JSON string
+              if (productData.specs) {
+                  formData.append("specs", productData.specs);
+              }
+
+              return {
+                  url: "products",
+                  method: "POST",
+                  body: formData,
+                  // Do NOT set Content-Type — let browser set multipart boundary
+              };
+          },
+          invalidatesTags: [{ type: "Products", id: "LIST" }],
+          async onQueryStarted(_, { queryFulfilled }) {
+              await withToast(queryFulfilled, {
+                  success: "Product created successfully!",
+                  error: "Failed to create product.",
+              });
+          },
       }),
-      invalidatesTags: ["Applications"],
-      async onQueryStarted(_, { queryFulfilled }) {
-        await withToast(queryFulfilled, {
-          success: "Application created successfully!",
-          error: "Failed to create applications.",
-        });
-      },
-    }),
+
+      deleteProduct: build.mutation<{ message: string; deletedProductId: number }, number>({
+          query: (productId) => ({
+              url: `products/${productId}`,
+              method: "DELETE",
+          }),
+          invalidatesTags: (_result, _error, productId) => [
+              { type: "Products", id: productId },
+              { type: "Products", id: "LIST" },
+          ],
+          async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+              await withToast(queryFulfilled, {
+                  success: "Product deleted successfully!",
+                  error: "Failed to delete product.",
+              });
+          },
+      }),
+
+      updateProduct: build.mutation<
+          { message: string; product: Product },
+          {
+              productId: number;
+              name?: string;
+              description?: string;
+              price?: string | number;
+              stock?: number;
+              categoryId?: number;
+              images?: File[];                    // New images to upload
+              keepImageUrls?: string[];           // Existing URLs to KEEP (others will be deleted)
+              specs?: { key: string; value: string }[] | null;
+          }
+      >({
+          query: ({
+                      productId,
+                      name,
+                      description,
+                      price,
+                      stock,
+                      categoryId,
+                      images,
+                      keepImageUrls,
+                      specs,
+                  }) => {
+              const formData = new FormData();
+
+              if (name !== undefined) formData.append("name", name);
+              if (description !== undefined) formData.append("description", description ?? "");
+              if (price !== undefined) formData.append("price", price.toString());
+              if (stock !== undefined) formData.append("stock", stock.toString());
+              if (categoryId !== undefined) formData.append("categoryId", categoryId.toString());
+
+              // Append new images
+              images?.forEach((image) => {
+                  formData.append("images", image);
+              });
+
+              // Tell backend which existing images to keep
+              if (keepImageUrls !== undefined) {
+                  formData.append("keepImageUrls", JSON.stringify(keepImageUrls));
+              }
+
+              // Append specs as JSON string (or null/undefined to clear)
+              if (specs !== undefined) {
+                  formData.append("specs", JSON.stringify(specs ?? []));
+              }
+
+              return {
+                  url: `products/${productId}`,
+                  method: "PATCH",
+                  body: formData,
+                  // Let browser set multipart/form-data boundary
+              };
+          },
+          invalidatesTags: (_result, _error, { productId }) => [
+              { type: "Products", id: productId },
+              { type: "Products", id: "LIST" },
+          ],
+          async onQueryStarted(_arg, { queryFulfilled }) {
+              await withToast(queryFulfilled, {
+                  success: "Product updated successfully!",
+                  error: "Failed to update product.",
+              });
+          },
+      }),
+
+      createCategory: build.mutation<{ id: number; name: string }, { name: string }>({
+          query: (body) => ({
+              url: "products/categories",
+              method: "POST",
+              body,
+          }),
+          invalidatesTags: ["Categories"],
+          async onQueryStarted(_, { queryFulfilled }) {
+              await withToast(queryFulfilled, {
+                  success: "Category created successfully!",
+                  error: "Failed to create category",
+              });
+          },
+      }),
+
+      updateAdminSettings: build.mutation<
+         Admin,
+          { cognitoId: string } & Partial<Admin>
+        >({
+          query: ({ cognitoId, ...updatedAdmin }) => ({
+            url: `admins/${cognitoId}`,
+            method: "PUT",
+            body: updatedAdmin,
+          }),
+          invalidatesTags: (result) => [{ type: "Admin", id: result?.id }],
+          async onQueryStarted(_, { queryFulfilled }) {
+            await withToast(queryFulfilled, {
+              success: "Settings updated successfully!",
+              error: "Failed to update settings.",
+            });
+          },
+        }),
+
   }),
 });
 
 export const {
-  useGetAuthUserQuery,
-  useUpdateTenantSettingsMutation,
-  useUpdateManagerSettingsMutation,
-  useGetPropertiesQuery,
-  useGetPropertyQuery,
-  useGetCurrentResidencesQuery,
-  useGetManagerPropertiesQuery,
-  useCreatePropertyMutation,
-  useGetTenantQuery,
-  useAddFavoritePropertyMutation,
-  useRemoveFavoritePropertyMutation,
-  useGetLeasesQuery,
-  useGetPropertyLeasesQuery,
-  useGetPaymentsQuery,
-  useGetApplicationsQuery,
-  useUpdateApplicationStatusMutation,
-  useCreateApplicationMutation,
+    useGetAuthUserQuery,
+    useUpdateUserSettingsMutation,
+    useUpdateAdminSettingsMutation,
+    useGetUserQuery,
+    useAddFavoriteProductMutation,
+    useRemoveFavoriteProductMutation,
+    useCreateProductMutation,
+    useGetCategoriesQuery,
+    useCreateCategoryMutation,
+    useUpdateProductMutation,
+    useDeleteProductMutation,
+    useGetProductsQuery,
+    useGetProductQuery,
 } = api;

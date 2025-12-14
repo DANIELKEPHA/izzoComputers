@@ -15,7 +15,7 @@ export interface FiltersState {
 interface InitialStateTypes {
   filters: FiltersState;
   isFiltersFullOpen: boolean;
-  viewMode: "grid" | "list";
+  viewMode: "table" | "card";
 }
 
 export const initialState: InitialStateTypes = {
@@ -31,7 +31,7 @@ export const initialState: InitialStateTypes = {
     coordinates: [-118.25, 34.05],
   },
   isFiltersFullOpen: false,
-  viewMode: "grid",
+  viewMode: "table",
 };
 
 export const globalSlice = createSlice({
@@ -44,7 +44,7 @@ export const globalSlice = createSlice({
     toggleFiltersFullOpen: (state) => {
       state.isFiltersFullOpen = !state.isFiltersFullOpen;
     },
-    setViewMode: (state, action: PayloadAction<"grid" | "list">) => {
+    setViewMode: (state, action: PayloadAction<"table" | "card">) => {
       state.viewMode = action.payload;
     },
   },

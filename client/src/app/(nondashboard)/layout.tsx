@@ -16,10 +16,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     if (authUser) {
       const userRole = authUser.userRole?.toLowerCase();
       if (
-        (userRole === "manager" && pathname.startsWith("/search")) ||
-        (userRole === "manager" && pathname === "/")
+        (userRole === "admin" && pathname.startsWith("/search")) ||
+        (userRole === "admin" && pathname === "/")
       ) {
-        router.push("/managers/properties", { scroll: false });
+        router.push("/admins/products", { scroll: false });
       } else {
         setIsLoading(false);
       }

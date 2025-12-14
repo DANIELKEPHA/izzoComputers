@@ -29,9 +29,9 @@ const components = {
     return (
       <View className="mt-4 mb-7">
         <Heading level={3} className="!text-2xl !font-bold">
-          RENT
+          IZZO&nbsp;
           <span className="text-secondary-500 font-light hover:!text-primary-300">
-            IFUL
+            COMPUTERS
           </span>
         </Heading>
         <p className="text-muted-foreground mt-2">
@@ -72,8 +72,8 @@ const components = {
             hasError={!!validationErrors?.["custom:role"]}
             isRequired
           >
-            <Radio value="tenant">Tenant</Radio>
-            <Radio value="manager">Manager</Radio>
+            <Radio value="user">User</Radio>
+            <Radio value="admin">Admin</Radio>
           </RadioGroupField>
         </>
       );
@@ -146,7 +146,7 @@ const Auth = ({ children }: { children: React.ReactNode }) => {
 
   const isAuthPage = pathname.match(/^\/(signin|signup)$/);
   const isDashboardPage =
-    pathname.startsWith("/manager") || pathname.startsWith("/tenants");
+    pathname.startsWith("/admin") || pathname.startsWith("/users");
 
   // Redirect authenticated users away from auth pages
   useEffect(() => {
