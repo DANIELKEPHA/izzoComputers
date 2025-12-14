@@ -6,14 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
-
 import {
     useGetProductQuery,
     useUpdateProductMutation,
     useGetCategoriesQuery,
     useGetAuthUserQuery,
 } from "@/state/api";
-
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -52,28 +50,23 @@ const categoryIcons: Record<string, string> = {
 export default function EditProductPage() {
     const router = useRouter();
     const params = useParams();
+    const idParam = params.id as string | string[] | undefined;
 
-    const idParam = params.id;
-    if (!idParam || Array.isArray(idParam)) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-2xl text-red-600 font-medium">Invalid product URL</p>
-            </div>
-        );
-    }
-
-    const productId = Number(idParam);
-    if (isNaN(productId)) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-2xl text-red-600 font-medium">Invalid product ID</p>
-            </div>
-        );
-    }
-
+    // === ALL HOOKS CALLED UNCONDITIONALLY AT THE TOP ===
     const { data: authUser } = useGetAuthUserQuery();
-    const { data: product, isLoading: productLoading } = useGetProductQuery(productId);
     const { data: categories = [] } = useGetCategoriesQuery();
+
+    // Validate idParam — but DO NOT return early yet
+    const isInvalidUrl = !idParam || Array.isArray(idParam);
+    const rawProductId = Array.isArray(idParam) ? idParam[0] : idParam;
+    const productId = rawProductId ? Number(rawProductId) : NaN;
+    const isInvalidId = isNaN(productId);
+
+    // Now call product-dependent hooks unconditionally
+    // If productId is invalid, RTK Query will just not fetch (or error internally — safe)
+    const { data: product, isLoading: productLoading } = useGetProductQuery(productId, {
+        skip: isInvalidUrl || isInvalidId,
+    });
     const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
 
     const [activeTab, setActiveTab] = useState("basic");
@@ -101,7 +94,6 @@ export default function EditProductPage() {
         },
     });
 
-    // Load product data safely using reset()
     useEffect(() => {
         if (product) {
             reset({
@@ -112,26 +104,67 @@ export default function EditProductPage() {
                 categoryId: product.categoryId,
             });
 
-            // Load specs
             if (Array.isArray(product.specs) && product.specs.length > 0) {
                 setSpecs(product.specs.map((s: any) => ({ key: s.key, value: s.value })));
             } else {
                 setSpecs([]);
             }
 
-            // Load images
             const images = product.imageUrls?.filter(Boolean) || (product.imageUrl ? [product.imageUrl] : []);
             setExistingImages(images);
         }
     }, [product, reset]);
 
-   useEffect(() => {
+    useEffect(() => {
         if (authUser && authUser.userRole !== "admin") {
             toast.error("Access Denied");
             router.push("/");
         }
     }, [authUser, router]);
 
+    // === ALL HOOKS ARE NOW DONE ===
+
+    // Early return screens — AFTER all hooks
+    if (isInvalidUrl) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <p className="text-2xl text-red-600 font-medium">Invalid product URL</p>
+            </div>
+        );
+    }
+
+    if (isInvalidId) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <p className="text-2xl text-red-600 font-medium">Invalid product ID</p>
+            </div>
+        );
+    }
+
+    if (productLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+                <span className="ml-4 text-xl text-gray-600">Loading product...</span>
+            </div>
+        );
+    }
+
+    if (!product) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <Package className="mx-auto h-20 w-20 text-gray-300 mb-6" />
+                    <p className="text-2xl font-medium text-gray-600">Product not found</p>
+                    <Button onClick={() => router.push("/admins/products")} className="mt-6">
+                        Back to Products
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    // Helper functions (unchanged)
     const addSpec = () => setSpecs([...specs, { key: "", value: "" }]);
 
     const updateSpec = (index: number, field: "key" | "value", value: string) => {
@@ -145,18 +178,15 @@ export default function EditProductPage() {
     const handleNewImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         const validFiles = files.filter((f) => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024);
-
         if (validFiles.length === 0) {
             toast.error("No valid images selected (max 10MB each)");
             return;
         }
-
         const totalImages = existingImages.length + newImages.length + validFiles.length;
         if (totalImages > 10) {
             toast.error("Maximum 10 images allowed");
             return;
         }
-
         setNewImages((prev) => [...prev, ...validFiles]);
         validFiles.forEach((file) => {
             const reader = new FileReader();
@@ -211,30 +241,6 @@ export default function EditProductPage() {
     const selectedCategoryId = watch("categoryId");
     const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
     const primaryPreviewImage = newImagePreviews[0] || existingImages[0];
-
-    // Loading & Error States
-    if (productLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-                <span className="ml-4 text-xl text-gray-600">Loading product...</span>
-            </div>
-        );
-    }
-
-    if (!product) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <Package className="mx-auto h-20 w-20 text-gray-300 mb-6" />
-                    <p className="text-2xl font-medium text-gray-600">Product not found</p>
-                    <Button onClick={() => router.push("/admins/products")} className="mt-6">
-                        Back to Products
-                    </Button>
-                </div>
-            </div>
-        );
-    }
 
     // Main UI
     return (
@@ -319,7 +325,6 @@ export default function EditProductPage() {
                                                 />
                                                 {errors.name && <p className="text-red-600 mt-2">{errors.name.message}</p>}
                                             </div>
-
                                             <div>
                                                 <Label className="text-base font-medium">Category *</Label>
                                                 <Controller
@@ -345,7 +350,6 @@ export default function EditProductPage() {
                                                 />
                                                 {errors.categoryId && <p className="text-red-600 mt-2">{errors.categoryId.message}</p>}
                                             </div>
-
                                             <div>
                                                 <Label className="text-base font-medium">Description *</Label>
                                                 <Controller
@@ -382,7 +386,6 @@ export default function EditProductPage() {
                                                 </div>
                                                 {errors.price && <p className="text-red-600 mt-2">{errors.price.message}</p>}
                                             </div>
-
                                             <div>
                                                 <Label className="text-base font-medium">Stock Quantity *</Label>
                                                 <div className="relative mt-2">
@@ -398,7 +401,6 @@ export default function EditProductPage() {
                                                 {errors.stock && <p className="text-red-600 mt-2">{errors.stock.message}</p>}
                                             </div>
                                         </div>
-
                                         <Card className="bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 mt-8">
                                             <CardContent className="py-8">
                                                 <div className="flex items-center justify-between">
@@ -425,7 +427,6 @@ export default function EditProductPage() {
                                                     <Plus className="mr-2 h-5 w-5" /> Add Specification
                                                 </Button>
                                             </div>
-
                                             {specs.length === 0 ? (
                                                 <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-300">
                                                     <Package className="mx-auto h-24 w-24 text-gray-300 mb-6" />
@@ -480,7 +481,6 @@ export default function EditProductPage() {
                                                     <p className="text-gray-500">PNG, JPG, GIF up to 10MB • Max 10 images</p>
                                                 </label>
                                             </div>
-
                                             {(existingImages.length > 0 || newImagePreviews.length > 0) && (
                                                 <div className="mt-10">
                                                     <div className="flex justify-between items-center mb-6">
@@ -551,9 +551,9 @@ export default function EditProductPage() {
                                         {watch("name") || "Product Name"}
                                     </h3>
                                     <div className="flex items-center justify-between">
-                    <span className="text-3xl font-bold text-blue-600">
-                      KES {watch("price") ? Number(watch("price")).toLocaleString("en-KE") : "0"}
-                    </span>
+                                        <span className="text-3xl font-bold text-blue-600">
+                                            KES {watch("price") ? Number(watch("price")).toLocaleString("en-KE") : "0"}
+                                        </span>
                                         <Badge className="text-lg px-5 py-2" variant={Number(stock) > 0 ? "default" : "secondary"}>
                                             {Number(stock) > 0 ? `In Stock (${stock})` : "Out of Stock"}
                                         </Badge>
@@ -593,8 +593,8 @@ export default function EditProductPage() {
                                         <div className="flex justify-between items-end">
                                             <span className="text-gray-700 font-medium text-xl">Estimated Stock Value</span>
                                             <span className="font-bold text-3xl text-green-600">
-                        KES {estimatedRevenue.toLocaleString("en-KE")}
-                      </span>
+                                                KES {estimatedRevenue.toLocaleString("en-KE")}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
