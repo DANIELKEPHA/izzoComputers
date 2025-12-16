@@ -101,7 +101,11 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
             price,
             stock,
             categoryId,
-            specs: specsJson, // Expecting JSON string from frontend
+            specs: specsJson,
+            averageRating,
+            reviewCount,
+            discountPercent,
+            warranty,
         } = req.body;
 
         // === 1. Validate required fields ===
@@ -114,7 +118,6 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
 
         // === 2. Upload images to S3 ===
         let imageUrls: string[] = [];
-
         if (files && files.length > 0) {
             const uploadedUrls = await Promise.all(
                 files.map(async (file) => {
@@ -124,13 +127,11 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
                         Body: file.buffer,
                         ContentType: file.mimetype,
                     };
-
                     try {
                         const uploadResult = await new Upload({
                             client: s3Client,
                             params: uploadParams,
                         }).done();
-
                         return uploadResult.Location as string;
                     } catch (uploadError) {
                         console.error(`Failed to upload ${file.originalname}:`, uploadError);
@@ -138,14 +139,11 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
                     }
                 })
             );
-
-            // Filter out failed uploads and assert string[]
-            imageUrls = uploadedUrls.filter((url): url is string => url !== null && url !== undefined);
+            imageUrls = uploadedUrls.filter((url): url is string => url !== null);
         }
 
         // === 3. Parse and validate dynamic specs ===
-        let specs: { key: string; value: string }[] | null = null;
-
+        let specs: { key: string; value: string }[] | undefined = undefined;
         if (specsJson) {
             try {
                 const parsed = JSON.parse(specsJson);
@@ -155,13 +153,13 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
                             key: item.key?.trim(),
                             value: item.value?.trim(),
                         }))
-                        .filter((item): item is { key: string; value: string } =>
-                            item.key && item.value && item.key.length > 0 && item.value.length > 0
+                        .filter(
+                            (item): item is { key: string; value: string } =>
+                                !!item.key && !!item.value
                         );
                 }
             } catch (e) {
                 console.warn("Invalid specs JSON received:", specsJson);
-                // Continue without specs — don't fail entire creation
             }
         }
 
@@ -169,14 +167,26 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         const product = await prisma.product.create({
             data: {
                 name: name.trim(),
-                slug: name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+                slug: name
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")
+                    .replace(/[^a-z0-9-]/g, ""),
                 description: description?.trim() || null,
                 price: new Prisma.Decimal(price),
                 stock: Number(stock),
                 categoryId: Number(categoryId),
                 imageUrl: imageUrls[0] || null,
-                imageUrls,
-                specs: specs && specs.length > 0 ? specs : undefined, // ← Change null to undefined
+                imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+                specs: specs && specs.length > 0 ? specs : undefined,
+
+                averageRating: averageRating
+                    ? new Prisma.Decimal(averageRating)
+                    : undefined,
+                reviewCount: reviewCount ? Number(reviewCount) : undefined,
+                discountPercent: discountPercent
+                    ? Number(discountPercent)
+                    : undefined,
+                warranty: warranty?.trim() || undefined,
             },
             include: {
                 category: {
@@ -192,25 +202,17 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         });
     } catch (err: any) {
         console.error("Error creating product:", err);
-
-        // Handle known Prisma errors
         if (err.code === "P2002") {
             res.status(409).json({
                 message: "A product with this name or slug already exists",
             });
             return;
         }
-
         if (err.code === "P2003") {
-            res.status(400).json({
-                message: "Invalid category ID",
-            });
+            res.status(400).json({ message: "Invalid category ID" });
             return;
         }
-
-        res.status(500).json({
-            message: "Failed to create product. Please try again.",
-        });
+        res.status(500).json({ message: "Failed to create product. Please try again." });
     }
 };
 
@@ -384,56 +386,55 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
         const productId = Number(id);
 
         const files = req.files as Express.Multer.File[] | undefined;
-
         const {
             name,
             description,
             price,
             stock,
             categoryId,
-            specs: specsJson,           // JSON string from frontend
-            keepImageUrls: keepImageUrlsJson, // stringified array of URLs the frontend wants to KEEP
+            specs: specsJson,
+            keepImageUrls: keepImageUrlsJson,
+            averageRating,
+            reviewCount,
+            discountPercent,
+            warranty,
         } = req.body;
 
-        // 1. Find existing product (with current images)
+        // 1. Find existing product
         const existingProduct = await prisma.product.findUnique({
             where: { id: productId },
-            select: {
-                id: true,
-                imageUrl: true,
-                imageUrls: true,
-            },
+            select: { id: true, imageUrl: true, imageUrls: true },
         });
-
         if (!existingProduct) {
             res.status(404).json({ message: "Product not found" });
             return;
         }
 
-        // 2. Parse which image URLs the frontend wants to KEEP
+        // 2. Parse kept image URLs
         let keepImageUrls: string[] = [];
         if (keepImageUrlsJson) {
             try {
                 const parsed = JSON.parse(keepImageUrlsJson);
                 if (Array.isArray(parsed)) {
-                    keepImageUrls = parsed.filter((url: any) => typeof url === "string" && url.startsWith("https://"));
+                    keepImageUrls = parsed.filter(
+                        (url: any) => typeof url === "string" && url.startsWith("https://")
+                    );
                 }
             } catch (e) {
                 console.warn("Invalid keepImageUrls JSON");
             }
         }
 
-        // 3. Determine which old images to delete from S3
+        // 3. Determine images to delete
         const currentUrls = new Set([
             existingProduct.imageUrl || "",
             ...(existingProduct.imageUrls || []),
         ].filter(Boolean));
-
         const urlsToDelete = Array.from(currentUrls).filter(
             (url) => !keepImageUrls.includes(url)
         );
 
-        // 4. Upload new images (if any)
+        // 4. Upload new images
         let newImageUrls: string[] = [];
         if (files && files.length > 0) {
             const uploadResults = await Promise.all(
@@ -445,7 +446,6 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
                         Body: file.buffer,
                         ContentType: file.mimetype,
                     };
-
                     try {
                         const result = await new Upload({
                             client: s3Client,
@@ -458,15 +458,14 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
                     }
                 })
             );
-
             newImageUrls = uploadResults.filter((url): url is string => !!url);
         }
 
-        // 5. Final list of image URLs after update
+        // 5. Final image list
         const finalImageUrls = [...keepImageUrls, ...newImageUrls];
         const finalPrimaryImageUrl = finalImageUrls[0] || null;
 
-        // 6. Parse dynamic specs (same logic as create)
+        // 6. Parse specs
         let specs: { key: string; value: string }[] | undefined = undefined;
         if (specsJson && specsJson !== "null" && specsJson !== "undefined") {
             try {
@@ -484,7 +483,6 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
                 }
             } catch (e) {
                 console.warn("Invalid specs JSON on update");
-                // continue without specs
             }
         }
 
@@ -499,25 +497,43 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
                         .replace(/\s+/g, "-")
                         .replace(/[^a-z0-9-]/g, ""),
                 }),
-                ...(description !== undefined && { description: description?.trim() || null }),
+                ...(description !== undefined && {
+                    description: description?.trim() || null,
+                }),
                 ...(price && { price: new Prisma.Decimal(price) }),
                 ...(stock !== undefined && { stock: Number(stock) }),
                 ...(categoryId && { categoryId: Number(categoryId) }),
                 imageUrl: finalPrimaryImageUrl,
                 imageUrls: finalImageUrls.length > 0 ? finalImageUrls : undefined,
                 specs: specs && specs.length > 0 ? specs : undefined,
+
+                // Update new dynamic fields only if provided
+                ...(averageRating !== undefined && {
+                    averageRating: averageRating
+                        ? new Prisma.Decimal(averageRating)
+                        : null,
+                }),
+                ...(reviewCount !== undefined && {
+                    reviewCount: reviewCount ? Number(reviewCount) : null,
+                }),
+                ...(discountPercent !== undefined && {
+                    discountPercent: discountPercent ? Number(discountPercent) : null,
+                }),
+                ...(warranty !== undefined && {
+                    warranty: warranty?.trim() || null,
+                }),
             },
             include: {
                 category: { select: { id: true, name: true } },
             },
         });
 
-        // 8. Delete removed images from S3 (fire and forget errors)
+        // 8. Delete removed images from S3
         if (urlsToDelete.length > 0) {
             const deletePromises = urlsToDelete.map(async (url) => {
                 try {
                     const urlObj = new URL(url);
-                    const Key = urlObj.pathname.slice(1); // remove leading "/"
+                    const Key = urlObj.pathname.slice(1);
                     await s3Client.send(
                         new DeleteObjectCommand({
                             Bucket: process.env.S3_BUCKET_NAME!,
@@ -529,7 +545,6 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
                     console.error(`Failed to delete S3 object ${url}:`, err);
                 }
             });
-
             await Promise.allSettled(deletePromises);
         }
 
@@ -539,7 +554,6 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
         });
     } catch (err: any) {
         console.error("updateProduct error:", err);
-
         if (err.code === "P2025") {
             res.status(404).json({ message: "Product not found" });
             return;
@@ -552,7 +566,6 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
             res.status(400).json({ message: "Invalid category ID" });
             return;
         }
-
         res.status(500).json({ message: "Failed to update product" });
     }
 };

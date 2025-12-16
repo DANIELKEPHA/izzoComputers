@@ -4,11 +4,12 @@ import FeaturesSection from "./FeaturesSection";
 import DiscoverSection from "./DiscoverSection";
 import CallToActionSection from "./CallToActionSection";
 import FooterSection from "./FooterSection";
+import ShopPage from "@/app/(nondashboard)/landing/shop/page";
 
 const Landing = () => {
   return (
     <div>
-      <HeroSection />
+      <ShopPage />
       <FeaturesSection />
       <DiscoverSection />
       <CallToActionSection />

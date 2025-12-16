@@ -5130,6 +5130,9 @@ export namespace Prisma {
     price: Decimal | null
     stock: number | null
     categoryId: number | null
+    averageRating: Decimal | null
+    reviewCount: number | null
+    discountPercent: number | null
   }
 
   export type ProductSumAggregateOutputType = {
@@ -5137,6 +5140,9 @@ export namespace Prisma {
     price: Decimal | null
     stock: number | null
     categoryId: number | null
+    averageRating: Decimal | null
+    reviewCount: number | null
+    discountPercent: number | null
   }
 
   export type ProductMinAggregateOutputType = {
@@ -5150,6 +5156,10 @@ export namespace Prisma {
     categoryId: number | null
     createdAt: Date | null
     updatedAt: Date | null
+    averageRating: Decimal | null
+    reviewCount: number | null
+    discountPercent: number | null
+    warranty: string | null
   }
 
   export type ProductMaxAggregateOutputType = {
@@ -5163,6 +5173,10 @@ export namespace Prisma {
     categoryId: number | null
     createdAt: Date | null
     updatedAt: Date | null
+    averageRating: Decimal | null
+    reviewCount: number | null
+    discountPercent: number | null
+    warranty: string | null
   }
 
   export type ProductCountAggregateOutputType = {
@@ -5178,6 +5192,10 @@ export namespace Prisma {
     categoryId: number
     createdAt: number
     updatedAt: number
+    averageRating: number
+    reviewCount: number
+    discountPercent: number
+    warranty: number
     _all: number
   }
 
@@ -5187,6 +5205,9 @@ export namespace Prisma {
     price?: true
     stock?: true
     categoryId?: true
+    averageRating?: true
+    reviewCount?: true
+    discountPercent?: true
   }
 
   export type ProductSumAggregateInputType = {
@@ -5194,6 +5215,9 @@ export namespace Prisma {
     price?: true
     stock?: true
     categoryId?: true
+    averageRating?: true
+    reviewCount?: true
+    discountPercent?: true
   }
 
   export type ProductMinAggregateInputType = {
@@ -5207,6 +5231,10 @@ export namespace Prisma {
     categoryId?: true
     createdAt?: true
     updatedAt?: true
+    averageRating?: true
+    reviewCount?: true
+    discountPercent?: true
+    warranty?: true
   }
 
   export type ProductMaxAggregateInputType = {
@@ -5220,6 +5248,10 @@ export namespace Prisma {
     categoryId?: true
     createdAt?: true
     updatedAt?: true
+    averageRating?: true
+    reviewCount?: true
+    discountPercent?: true
+    warranty?: true
   }
 
   export type ProductCountAggregateInputType = {
@@ -5235,6 +5267,10 @@ export namespace Prisma {
     categoryId?: true
     createdAt?: true
     updatedAt?: true
+    averageRating?: true
+    reviewCount?: true
+    discountPercent?: true
+    warranty?: true
     _all?: true
   }
 
@@ -5337,6 +5373,10 @@ export namespace Prisma {
     categoryId: number
     createdAt: Date
     updatedAt: Date
+    averageRating: Decimal | null
+    reviewCount: number | null
+    discountPercent: number | null
+    warranty: string | null
     _count: ProductCountAggregateOutputType | null
     _avg: ProductAvgAggregateOutputType | null
     _sum: ProductSumAggregateOutputType | null
@@ -5371,6 +5411,10 @@ export namespace Prisma {
     categoryId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    averageRating?: boolean
+    reviewCount?: boolean
+    discountPercent?: boolean
+    warranty?: boolean
     CartItem?: boolean | Product$CartItemArgs<ExtArgs>
     OrderItem?: boolean | Product$OrderItemArgs<ExtArgs>
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -5391,6 +5435,10 @@ export namespace Prisma {
     categoryId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    averageRating?: boolean
+    reviewCount?: boolean
+    discountPercent?: boolean
+    warranty?: boolean
     category?: boolean | CategoryDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["product"]>
 
@@ -5407,6 +5455,10 @@ export namespace Prisma {
     categoryId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    averageRating?: boolean
+    reviewCount?: boolean
+    discountPercent?: boolean
+    warranty?: boolean
     category?: boolean | CategoryDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["product"]>
 
@@ -5423,9 +5475,13 @@ export namespace Prisma {
     categoryId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    averageRating?: boolean
+    reviewCount?: boolean
+    discountPercent?: boolean
+    warranty?: boolean
   }
 
-  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "description" | "price" | "stock" | "imageUrl" | "imageUrls" | "specs" | "categoryId" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
+  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "description" | "price" | "stock" | "imageUrl" | "imageUrls" | "specs" | "categoryId" | "createdAt" | "updatedAt" | "averageRating" | "reviewCount" | "discountPercent" | "warranty", ExtArgs["result"]["product"]>
   export type ProductInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     CartItem?: boolean | Product$CartItemArgs<ExtArgs>
     OrderItem?: boolean | Product$OrderItemArgs<ExtArgs>
@@ -5461,6 +5517,10 @@ export namespace Prisma {
       categoryId: number
       createdAt: Date
       updatedAt: Date
+      averageRating: Prisma.Decimal | null
+      reviewCount: number | null
+      discountPercent: number | null
+      warranty: string | null
     }, ExtArgs["result"]["product"]>
     composites: {}
   }
@@ -5900,6 +5960,10 @@ export namespace Prisma {
     readonly categoryId: FieldRef<"Product", 'Int'>
     readonly createdAt: FieldRef<"Product", 'DateTime'>
     readonly updatedAt: FieldRef<"Product", 'DateTime'>
+    readonly averageRating: FieldRef<"Product", 'Decimal'>
+    readonly reviewCount: FieldRef<"Product", 'Int'>
+    readonly discountPercent: FieldRef<"Product", 'Int'>
+    readonly warranty: FieldRef<"Product", 'String'>
   }
     
 
@@ -12873,7 +12937,11 @@ export namespace Prisma {
     specs: 'specs',
     categoryId: 'categoryId',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    averageRating: 'averageRating',
+    reviewCount: 'reviewCount',
+    discountPercent: 'discountPercent',
+    warranty: 'warranty'
   };
 
   export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
@@ -13249,6 +13317,10 @@ export namespace Prisma {
     categoryId?: IntFilter<"Product"> | number
     createdAt?: DateTimeFilter<"Product"> | Date | string
     updatedAt?: DateTimeFilter<"Product"> | Date | string
+    averageRating?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: IntNullableFilter<"Product"> | number | null
+    discountPercent?: IntNullableFilter<"Product"> | number | null
+    warranty?: StringNullableFilter<"Product"> | string | null
     CartItem?: CartItemListRelationFilter
     OrderItem?: OrderItemListRelationFilter
     category?: XOR<CategoryScalarRelationFilter, CategoryWhereInput>
@@ -13268,6 +13340,10 @@ export namespace Prisma {
     categoryId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    averageRating?: SortOrderInput | SortOrder
+    reviewCount?: SortOrderInput | SortOrder
+    discountPercent?: SortOrderInput | SortOrder
+    warranty?: SortOrderInput | SortOrder
     CartItem?: CartItemOrderByRelationAggregateInput
     OrderItem?: OrderItemOrderByRelationAggregateInput
     category?: CategoryOrderByWithRelationInput
@@ -13290,6 +13366,10 @@ export namespace Prisma {
     categoryId?: IntFilter<"Product"> | number
     createdAt?: DateTimeFilter<"Product"> | Date | string
     updatedAt?: DateTimeFilter<"Product"> | Date | string
+    averageRating?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: IntNullableFilter<"Product"> | number | null
+    discountPercent?: IntNullableFilter<"Product"> | number | null
+    warranty?: StringNullableFilter<"Product"> | string | null
     CartItem?: CartItemListRelationFilter
     OrderItem?: OrderItemListRelationFilter
     category?: XOR<CategoryScalarRelationFilter, CategoryWhereInput>
@@ -13309,6 +13389,10 @@ export namespace Prisma {
     categoryId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    averageRating?: SortOrderInput | SortOrder
+    reviewCount?: SortOrderInput | SortOrder
+    discountPercent?: SortOrderInput | SortOrder
+    warranty?: SortOrderInput | SortOrder
     _count?: ProductCountOrderByAggregateInput
     _avg?: ProductAvgOrderByAggregateInput
     _max?: ProductMaxOrderByAggregateInput
@@ -13332,6 +13416,10 @@ export namespace Prisma {
     categoryId?: IntWithAggregatesFilter<"Product"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Product"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Product"> | Date | string
+    averageRating?: DecimalNullableWithAggregatesFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: IntNullableWithAggregatesFilter<"Product"> | number | null
+    discountPercent?: IntNullableWithAggregatesFilter<"Product"> | number | null
+    warranty?: StringNullableWithAggregatesFilter<"Product"> | string | null
   }
 
   export type LocationWhereInput = {
@@ -13862,6 +13950,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     CartItem?: CartItemCreateNestedManyWithoutProductInput
     OrderItem?: OrderItemCreateNestedManyWithoutProductInput
     category: CategoryCreateNestedOneWithoutProductsInput
@@ -13881,6 +13973,10 @@ export namespace Prisma {
     categoryId: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     CartItem?: CartItemUncheckedCreateNestedManyWithoutProductInput
     OrderItem?: OrderItemUncheckedCreateNestedManyWithoutProductInput
     favoritedBy?: UserUncheckedCreateNestedManyWithoutFavoritesInput
@@ -13897,6 +13993,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     CartItem?: CartItemUpdateManyWithoutProductNestedInput
     OrderItem?: OrderItemUpdateManyWithoutProductNestedInput
     category?: CategoryUpdateOneRequiredWithoutProductsNestedInput
@@ -13916,6 +14016,10 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     CartItem?: CartItemUncheckedUpdateManyWithoutProductNestedInput
     OrderItem?: OrderItemUncheckedUpdateManyWithoutProductNestedInput
     favoritedBy?: UserUncheckedUpdateManyWithoutFavoritesNestedInput
@@ -13934,6 +14038,10 @@ export namespace Prisma {
     categoryId: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
   }
 
   export type ProductUpdateManyMutationInput = {
@@ -13947,6 +14055,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ProductUncheckedUpdateManyInput = {
@@ -13962,6 +14074,10 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type LocationUpdateInput = {
@@ -14523,6 +14639,28 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type DecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type CartItemListRelationFilter = {
     every?: CartItemWhereInput
     some?: CartItemWhereInput
@@ -14576,6 +14714,10 @@ export namespace Prisma {
     categoryId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    averageRating?: SortOrder
+    reviewCount?: SortOrder
+    discountPercent?: SortOrder
+    warranty?: SortOrder
   }
 
   export type ProductAvgOrderByAggregateInput = {
@@ -14583,6 +14725,9 @@ export namespace Prisma {
     price?: SortOrder
     stock?: SortOrder
     categoryId?: SortOrder
+    averageRating?: SortOrder
+    reviewCount?: SortOrder
+    discountPercent?: SortOrder
   }
 
   export type ProductMaxOrderByAggregateInput = {
@@ -14596,6 +14741,10 @@ export namespace Prisma {
     categoryId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    averageRating?: SortOrder
+    reviewCount?: SortOrder
+    discountPercent?: SortOrder
+    warranty?: SortOrder
   }
 
   export type ProductMinOrderByAggregateInput = {
@@ -14609,6 +14758,10 @@ export namespace Prisma {
     categoryId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    averageRating?: SortOrder
+    reviewCount?: SortOrder
+    discountPercent?: SortOrder
+    warranty?: SortOrder
   }
 
   export type ProductSumOrderByAggregateInput = {
@@ -14616,6 +14769,9 @@ export namespace Prisma {
     price?: SortOrder
     stock?: SortOrder
     categoryId?: SortOrder
+    averageRating?: SortOrder
+    reviewCount?: SortOrder
+    discountPercent?: SortOrder
   }
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -14689,6 +14845,38 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type LocationCountOrderByAggregateInput = {
@@ -14900,17 +15088,6 @@ export namespace Prisma {
     price?: SortOrder
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type spatial_ref_sysCountOrderByAggregateInput = {
     srid?: SortOrder
     auth_name?: SortOrder
@@ -14943,22 +15120,6 @@ export namespace Prisma {
   export type spatial_ref_sysSumOrderByAggregateInput = {
     srid?: SortOrder
     auth_srid?: SortOrder
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -15206,6 +15367,22 @@ export namespace Prisma {
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type NullableDecimalFieldUpdateOperationsInput = {
+    set?: Decimal | DecimalJsLike | number | string | null
+    increment?: Decimal | DecimalJsLike | number | string
+    decrement?: Decimal | DecimalJsLike | number | string
+    multiply?: Decimal | DecimalJsLike | number | string
+    divide?: Decimal | DecimalJsLike | number | string
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type CartItemUpdateManyWithoutProductNestedInput = {
@@ -15466,14 +15643,6 @@ export namespace Prisma {
     update?: XOR<XOR<ProductUpdateToOneWithWhereWithoutOrderItemInput, ProductUpdateWithoutOrderItemInput>, ProductUncheckedUpdateWithoutOrderItemInput>
   }
 
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -15579,6 +15748,28 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -15594,17 +15785,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedDecimalWithAggregatesFilter<$PrismaModel = never> = {
@@ -15657,6 +15837,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -15751,6 +15947,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     CartItem?: CartItemCreateNestedManyWithoutProductInput
     OrderItem?: OrderItemCreateNestedManyWithoutProductInput
     category: CategoryCreateNestedOneWithoutProductsInput
@@ -15769,6 +15969,10 @@ export namespace Prisma {
     categoryId: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     CartItem?: CartItemUncheckedCreateNestedManyWithoutProductInput
     OrderItem?: OrderItemUncheckedCreateNestedManyWithoutProductInput
   }
@@ -15866,6 +16070,10 @@ export namespace Prisma {
     categoryId?: IntFilter<"Product"> | number
     createdAt?: DateTimeFilter<"Product"> | Date | string
     updatedAt?: DateTimeFilter<"Product"> | Date | string
+    averageRating?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: IntNullableFilter<"Product"> | number | null
+    discountPercent?: IntNullableFilter<"Product"> | number | null
+    warranty?: StringNullableFilter<"Product"> | string | null
   }
 
   export type ProductCreateWithoutCategoryInput = {
@@ -15879,6 +16087,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     CartItem?: CartItemCreateNestedManyWithoutProductInput
     OrderItem?: OrderItemCreateNestedManyWithoutProductInput
     favoritedBy?: UserCreateNestedManyWithoutFavoritesInput
@@ -15896,6 +16108,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     CartItem?: CartItemUncheckedCreateNestedManyWithoutProductInput
     OrderItem?: OrderItemUncheckedCreateNestedManyWithoutProductInput
     favoritedBy?: UserUncheckedCreateNestedManyWithoutFavoritesInput
@@ -16229,6 +16445,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     OrderItem?: OrderItemCreateNestedManyWithoutProductInput
     category: CategoryCreateNestedOneWithoutProductsInput
     favoritedBy?: UserCreateNestedManyWithoutFavoritesInput
@@ -16247,6 +16467,10 @@ export namespace Prisma {
     categoryId: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     OrderItem?: OrderItemUncheckedCreateNestedManyWithoutProductInput
     favoritedBy?: UserUncheckedCreateNestedManyWithoutFavoritesInput
   }
@@ -16302,6 +16526,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     OrderItem?: OrderItemUpdateManyWithoutProductNestedInput
     category?: CategoryUpdateOneRequiredWithoutProductsNestedInput
     favoritedBy?: UserUpdateManyWithoutFavoritesNestedInput
@@ -16320,6 +16548,10 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     OrderItem?: OrderItemUncheckedUpdateManyWithoutProductNestedInput
     favoritedBy?: UserUncheckedUpdateManyWithoutFavoritesNestedInput
   }
@@ -16454,6 +16686,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     CartItem?: CartItemCreateNestedManyWithoutProductInput
     category: CategoryCreateNestedOneWithoutProductsInput
     favoritedBy?: UserCreateNestedManyWithoutFavoritesInput
@@ -16472,6 +16708,10 @@ export namespace Prisma {
     categoryId: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
     CartItem?: CartItemUncheckedCreateNestedManyWithoutProductInput
     favoritedBy?: UserUncheckedCreateNestedManyWithoutFavoritesInput
   }
@@ -16535,6 +16775,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     CartItem?: CartItemUpdateManyWithoutProductNestedInput
     category?: CategoryUpdateOneRequiredWithoutProductsNestedInput
     favoritedBy?: UserUpdateManyWithoutFavoritesNestedInput
@@ -16553,6 +16797,10 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     CartItem?: CartItemUncheckedUpdateManyWithoutProductNestedInput
     favoritedBy?: UserUncheckedUpdateManyWithoutFavoritesNestedInput
   }
@@ -16634,6 +16882,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     CartItem?: CartItemUpdateManyWithoutProductNestedInput
     OrderItem?: OrderItemUpdateManyWithoutProductNestedInput
     category?: CategoryUpdateOneRequiredWithoutProductsNestedInput
@@ -16652,6 +16904,10 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     CartItem?: CartItemUncheckedUpdateManyWithoutProductNestedInput
     OrderItem?: OrderItemUncheckedUpdateManyWithoutProductNestedInput
   }
@@ -16669,6 +16925,10 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ProductCreateManyCategoryInput = {
@@ -16683,6 +16943,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    averageRating?: Decimal | DecimalJsLike | number | string | null
+    reviewCount?: number | null
+    discountPercent?: number | null
+    warranty?: string | null
   }
 
   export type ProductUpdateWithoutCategoryInput = {
@@ -16696,6 +16960,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     CartItem?: CartItemUpdateManyWithoutProductNestedInput
     OrderItem?: OrderItemUpdateManyWithoutProductNestedInput
     favoritedBy?: UserUpdateManyWithoutFavoritesNestedInput
@@ -16713,6 +16981,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
     CartItem?: CartItemUncheckedUpdateManyWithoutProductNestedInput
     OrderItem?: OrderItemUncheckedUpdateManyWithoutProductNestedInput
     favoritedBy?: UserUncheckedUpdateManyWithoutFavoritesNestedInput
@@ -16730,6 +17002,10 @@ export namespace Prisma {
     specs?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    averageRating?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    reviewCount?: NullableIntFieldUpdateOperationsInput | number | null
+    discountPercent?: NullableIntFieldUpdateOperationsInput | number | null
+    warranty?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CartItemCreateManyProductInput = {

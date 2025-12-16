@@ -1,15 +1,18 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+export interface ProductSpec {
+    key: string;
+    value: string;
+}
+
 export interface FiltersState {
-  location: string;
-  beds: string;
-  baths: string;
-  propertyType: string;
-  amenities: string[];
-  availableFrom: string;
-  priceRange: [number, number] | [null, null];
-  squareFeet: [number, number] | [null, null];
-  coordinates: [number, number];
+    search?: string;
+    categoryId?: number;
+    priceMin?: number;
+    priceMax?: number;
+    sort?: string;
+    page?: number;
+    pageSize?: number;
 }
 
 interface InitialStateTypes {
@@ -19,20 +22,19 @@ interface InitialStateTypes {
 }
 
 export const initialState: InitialStateTypes = {
-  filters: {
-    location: "Los Angeles",
-    beds: "any",
-    baths: "any",
-    propertyType: "any",
-    amenities: [],
-    availableFrom: "any",
-    priceRange: [null, null],
-    squareFeet: [null, null],
-    coordinates: [-118.25, 34.05],
-  },
-  isFiltersFullOpen: false,
-  viewMode: "table",
+    filters: {
+        search: undefined,
+        categoryId: undefined,
+        priceMin: undefined,
+        priceMax: undefined,
+        sort: "featured",
+        page: 1,
+        pageSize: 20,
+    },
+    isFiltersFullOpen: false,
+    viewMode: "table",
 };
+
 
 export const globalSlice = createSlice({
   name: "global",

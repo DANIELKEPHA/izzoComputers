@@ -148,21 +148,26 @@ export const api = createApi({
                   : [{ type: "Products", id: "LIST" }],
       }),
 
-      // In your api endpoints
       getProducts: build.query<
-          { products: Product[]; total: number },  // ← Return object with total
-          {
-              search?: string;
-              categoryId?: number;
-              page?: number;
-              pageSize?: number;
-          }
+          { products: Product[]; total: number },
+          FiltersState
       >({
-          query: ({ search, categoryId, page = 1, pageSize = 20 }) => ({
+          query: ({
+                      search,
+                      categoryId,
+                      priceMin,
+                      priceMax,
+                      sort,
+                      page = 1,
+                      pageSize = 20,
+                  }) => ({
               url: "products",
               params: {
-                  search: search || undefined,
-                  categoryId: categoryId || undefined,
+                  search,
+                  categoryId,
+                  priceMin,
+                  priceMax,
+                  sort,
                   page,
                   pageSize,
               },
@@ -170,7 +175,10 @@ export const api = createApi({
           providesTags: (result) =>
               result
                   ? [
-                      ...result.products.map(({ id }) => ({ type: "Products" as const, id })),
+                      ...result.products.map(({ id }) => ({
+                          type: "Products" as const,
+                          id,
+                      })),
                       { type: "Products", id: "LIST" },
                   ]
                   : [{ type: "Products", id: "LIST" }],
@@ -191,6 +199,10 @@ export const api = createApi({
               categoryId: number;
               images?: File[];
               specs?: string;
+              averageRating?: number | string | null;
+              reviewCount?: number | null;
+              discountPercent?: number | null;
+              warranty?: string | null;
           }
       >({
           query: (productData) => {
@@ -202,21 +214,37 @@ export const api = createApi({
               formData.append("stock", productData.stock.toString());
               formData.append("categoryId", productData.categoryId.toString());
 
-              // Append images (multer will collect under req.files)
+              // Images
               productData.images?.forEach((image) => {
-                  formData.append("images", image); // ← Keep as "files" to match your backend (req.files)
+                  formData.append("images", image); // matches req.files in backend
               });
 
-              // Append dynamic specs as JSON string
-              if (productData.specs) {
+              // Specs (JSON string)
+              if (productData.specs !== undefined) {
                   formData.append("specs", productData.specs);
+              }
+
+              // === NEW FIELDS ===
+              if (productData.averageRating !== undefined && productData.averageRating !== null) {
+                  formData.append("averageRating", productData.averageRating.toString());
+              }
+
+              if (productData.reviewCount !== undefined && productData.reviewCount !== null) {
+                  formData.append("reviewCount", productData.reviewCount.toString());
+              }
+
+              if (productData.discountPercent !== undefined && productData.discountPercent !== null) {
+                  formData.append("discountPercent", productData.discountPercent.toString());
+              }
+
+              if (productData.warranty !== undefined) {
+                  formData.append("warranty", productData.warranty || "");
               }
 
               return {
                   url: "products",
                   method: "POST",
                   body: formData,
-                  // Do NOT set Content-Type — let browser set multipart boundary
               };
           },
           invalidatesTags: [{ type: "Products", id: "LIST" }],
@@ -254,9 +282,13 @@ export const api = createApi({
               price?: string | number;
               stock?: number;
               categoryId?: number;
-              images?: File[];                    // New images to upload
-              keepImageUrls?: string[];           // Existing URLs to KEEP (others will be deleted)
+              images?: File[];
+              keepImageUrls?: string[];
               specs?: { key: string; value: string }[] | null;
+              averageRating?: number | string | null;
+              reviewCount?: number | null;
+              discountPercent?: number | null;
+              warranty?: string | null;
           }
       >({
           query: ({
@@ -269,6 +301,10 @@ export const api = createApi({
                       images,
                       keepImageUrls,
                       specs,
+                      averageRating,
+                      reviewCount,
+                      discountPercent,
+                      warranty,
                   }) => {
               const formData = new FormData();
 
@@ -278,26 +314,48 @@ export const api = createApi({
               if (stock !== undefined) formData.append("stock", stock.toString());
               if (categoryId !== undefined) formData.append("categoryId", categoryId.toString());
 
-              // Append new images
+              // New images
               images?.forEach((image) => {
                   formData.append("images", image);
               });
 
-              // Tell backend which existing images to keep
+              // Keep existing images
               if (keepImageUrls !== undefined) {
                   formData.append("keepImageUrls", JSON.stringify(keepImageUrls));
               }
 
-              // Append specs as JSON string (or null/undefined to clear)
+              // Specs
               if (specs !== undefined) {
                   formData.append("specs", JSON.stringify(specs ?? []));
+              }
+
+              // === NEW DYNAMIC FIELDS ===
+              if (averageRating !== undefined && averageRating !== null) {
+                  formData.append("averageRating", averageRating.toString());
+              } else if (averageRating === null) {
+                  formData.append("averageRating", ""); // or omit — backend handles undefined as no change
+              }
+
+              if (reviewCount !== undefined && reviewCount !== null) {
+                  formData.append("reviewCount", reviewCount.toString());
+              } else if (reviewCount === null) {
+                  formData.append("reviewCount", "");
+              }
+
+              if (discountPercent !== undefined && discountPercent !== null) {
+                  formData.append("discountPercent", discountPercent.toString());
+              } else if (discountPercent === null) {
+                  formData.append("discountPercent", "");
+              }
+
+              if (warranty !== undefined) {
+                  formData.append("warranty", warranty || "");
               }
 
               return {
                   url: `products/${productId}`,
                   method: "PATCH",
                   body: formData,
-                  // Let browser set multipart/form-data boundary
               };
           },
           invalidatesTags: (_result, _error, { productId }) => [
