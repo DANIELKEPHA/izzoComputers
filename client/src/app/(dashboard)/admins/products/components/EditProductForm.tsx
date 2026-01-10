@@ -49,6 +49,7 @@ import {
     Shield,
 } from "lucide-react";
 import { toast } from "sonner";
+import {productSchema} from "@/lib/schemas";
 
 // Realistic rating options (same as create form)
 const ratingOptions = [
@@ -65,17 +66,6 @@ const ratingOptions = [
     { rating: 3.5, reviews: 30,   label: "3.5 ★★★☆☆ (30 reviews)" },
     { rating: null, reviews: 0,   label: "No rating yet" },
 ];
-
-const productSchema = z.object({
-    name: z.string().min(3, "Product name must be at least 3 characters"),
-    description: z.string().min(10, "Description must be at least 10 characters"),
-    price: z.string().refine((val) => {
-        const num = parseFloat(val);
-        return !isNaN(num) && num > 0;
-    }, "Price must be a positive number"),
-    stock: z.coerce.number().int().min(0, "Stock cannot be negative"),
-    categoryId: z.coerce.number().min(1, "Please select a category"),
-});
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -140,47 +130,57 @@ export default function EditProductForm({ productId }: EditProductFormProps) {
         },
     });
 
-    // Populate form and marketing fields when product loads
+    const { data } = useGetProductQuery(productId);
+
+    if (data) {
+        const prod = data.product;
+        console.log(prod.name);
+    }
+
     useEffect(() => {
-        if (product) {
+        if (product?.product) {
+            const prod = product.product;
+
             reset({
-                name: product.name || "",
-                description: product.description || "",
-                price: product.price.toString(),
-                stock: product.stock,
-                categoryId: product.categoryId,
+                name: prod.name || "",
+                description: prod.description || "",
+                price: prod.price.toString(),
+                stock: prod.stock,
+                categoryId: prod.categoryId,
             });
 
             // Specs
-            if (Array.isArray(product.specs) && product.specs.length > 0) {
-                setSpecs(product.specs.map((s: any) => ({ key: s.key, value: s.value })));
-            } else {
-                setSpecs([]);
-            }
+            const productSpecs: { key: string; value: string }[] = Array.isArray(prod.specs)
+                ? (prod.specs as { key: string; value: string }[])
+                : [];
+            setSpecs(productSpecs);
 
             // Images
-            const images = product.imageUrls?.filter(Boolean) || (product.imageUrl ? [product.imageUrl] : []);
+            const images: string[] = prod.imageUrls?.filter(Boolean) || (prod.imageUrl ? [prod.imageUrl] : []);
             setExistingImages(images);
 
             // Rating & Reviews
-            if (product.averageRating !== null && product.reviewCount !== null) {
+            if (prod.averageRating !== null && prod.reviewCount !== null) {
+                const avgRatingNumber =
+                    typeof prod.averageRating === "object"
+                        ? (prod.averageRating as any).toNumber()
+                        : parseFloat(prod.averageRating as unknown as string);
+
                 const matchingOption = ratingOptions.find(
-                    opt =>
-                        opt.rating === (typeof product.averageRating === "object" ? product.averageRating.toNumber() : parseFloat(product.averageRating)) &&
-                        opt.reviews === product.reviewCount
+                    (opt) => opt.rating === avgRatingNumber && opt.reviews === prod.reviewCount
                 );
-                if (matchingOption) {
-                    setSelectedRatingOption(matchingOption.label);
-                }
+
+                setSelectedRatingOption(matchingOption?.label || "No rating yet");
             } else {
                 setSelectedRatingOption("No rating yet");
             }
 
             // Discount & Warranty
-            setDiscountPercent(product.discountPercent?.toString() || "");
-            setWarranty(product.warranty || "");
+            setDiscountPercent(prod.discountPercent?.toString() || "");
+            setWarranty(prod.warranty || "");
         }
     }, [product, reset]);
+
 
     useEffect(() => {
         if (authUser && authUser.userRole !== "admin") {

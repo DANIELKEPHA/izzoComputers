@@ -43,3 +43,14 @@ export const updateAdvertSchema = advertSchema.partial().extend({
 
 export type UpdateAdvertFormData = z.infer<typeof updateAdvertSchema>;
 
+export const productSchema = z.object({
+    name: z.string().min(3, "Product name must be at least 3 characters"),
+    description: z.string().min(10, "Description must be at least 10 characters"),
+    price: z.string().refine((val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num > 0;
+    }, "Price must be a positive number"),
+    stock: z.coerce.number().int().min(0, "Stock cannot be negative"),
+    categoryId: z.coerce.number().min(1, "Please select a category"),
+});
+
