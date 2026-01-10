@@ -12,10 +12,23 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Plus, Search, Table as TableIcon, Grid3X3 as Grid } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Loader2,
+    Plus,
+    Search,
+    Table as TableIcon,
+    Grid3X3 as Grid,
+    Tag, // Icon for categories
+} from "lucide-react";
 import { toast } from "sonner";
-
 import {
     useGetProductsQuery,
     useGetCategoriesQuery,
@@ -24,7 +37,6 @@ import {
 } from "@/state/api";
 import { useAppDispatch, useAppSelector } from "@/state/redux";
 import { setViewMode } from "@/state";
-
 import CardView from "./components/CardView";
 import TableView from "./components/TableView";
 
@@ -33,6 +45,7 @@ const PAGE_SIZES = [10, 20, 50, 100];
 export default function AdminProductsPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
+
     const { data: authUser } = useGetAuthUserQuery();
     const viewMode = useAppSelector((state) => state.global.viewMode); // "table" | "card"
 
@@ -49,6 +62,7 @@ export default function AdminProductsPage() {
         page,
         pageSize,
     });
+
     const [deleteProduct, { isLoading: deleting }] = useDeleteProductMutation();
 
     const products = productsData?.products || [];
@@ -104,6 +118,7 @@ export default function AdminProductsPage() {
                         </h1>
                         <p className="text-sm text-gray-600">Total: {total} products</p>
                     </div>
+
                     <div className="flex items-center gap-4">
                         {/* View Mode Toggle */}
                         <div className="flex items-center bg-gray-100 rounded-lg p-1">
@@ -113,7 +128,8 @@ export default function AdminProductsPage() {
                                 onClick={() => dispatch(setViewMode("table"))}
                                 className="rounded-md"
                             >
-                                <TableIcon className="h-4 w-4 mr-1" /> Table
+                                <TableIcon className="h-4 w-4 mr-1" />
+                                Table
                             </Button>
                             <Button
                                 variant={viewMode === "card" ? "default" : "ghost"}
@@ -121,14 +137,28 @@ export default function AdminProductsPage() {
                                 onClick={() => dispatch(setViewMode("card"))}
                                 className="rounded-md"
                             >
-                                <Grid className="h-4 w-4 mr-1" /> Cards
+                                <Grid className="h-4 w-4 mr-1" />
+                                Cards
                             </Button>
                         </div>
+
+                        {/* New: Manage Categories Button */}
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push("/admins/products/category")}
+                            className="whitespace-nowrap"
+                        >
+                            <Tag className="mr-2 h-4 w-4" />
+                            Manage Categories
+                        </Button>
+
+                        {/* Add New Product Button */}
                         <Button
                             onClick={() => router.push("/admins/products/new")}
                             className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap"
                         >
-                            <Plus className="mr-2 h-4 w-4" /> Add New Product
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add New Product
                         </Button>
                     </div>
                 </div>
@@ -178,16 +208,16 @@ export default function AdminProductsPage() {
                         {viewMode === "table" ? (
                             <div className="overflow-x-auto">
                                 <table className="w-full">
-                                    <thead>
-                                    <tr className="bg-gray-50">
-                                        <th className="w-20 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                                             Image
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Name
+                                            Product Name
                                         </th>
-                                        <th className="w-48 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Description
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Specifications
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Category
@@ -196,9 +226,18 @@ export default function AdminProductsPage() {
                                             Price
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Rating
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Discount
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Warranty
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Stock
                                         </th>
-                                        <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
@@ -286,10 +325,15 @@ export default function AdminProductsPage() {
                             <Button variant="outline" onClick={() => setDeleteId(null)}>
                                 Cancel
                             </Button>
-                            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                            <Button
+                                variant="destructive"
+                                onClick={handleDelete}
+                                disabled={deleting}
+                            >
                                 {deleting ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Deleting...
                                     </>
                                 ) : (
                                     "Delete Product"

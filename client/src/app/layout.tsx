@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Fira_Mono } from "next/font/google"; // Google Fonts
 import "./globals.css";
 import Providers from "./providers";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Sans-serif font
+const geistSans = Inter({
+    weight: ["400", "500", "700"], // specify the weights you need
+    subsets: ["latin"],
+    variable: "--font-geist-sans",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// Monospace font
+const geistMono = Fira_Mono({
+    weight: ["400", "500", "700"], // specify the weights
+    subsets: ["latin"],
+    variable: "--font-geist-mono",
 });
 
 export const metadata: Metadata = {
@@ -25,18 +29,18 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
+                                       children,
+                                   }: Readonly<{
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    return (
+        <html lang="en">
+        <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
         <Providers>{children}</Providers>
         <Toaster closeButton />
-      </body>
-    </html>
-  );
+        </body>
+        </html>
+    );
 }

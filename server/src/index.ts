@@ -8,6 +8,12 @@ import { authMiddleware } from "./middleware/authMiddleware";
 import usersRoutes from "./routes/usersRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import productRoutes from "./routes/productRoutes";
+import advertRoutes from "./routes/advertRoutes";
+import newsletterRouter from "./routes/newsletterRouter";
+import cartRouter from "./routes/cartRouter";
+import orderRouter from "./routes/orderRouter";
+import deliveryLocationRoutes from "./routes/deliveryLocationRoutes";
+import dashboardRoutes from "./routes/dashboardRoutes";
 
 /* CONFIGURATIONS */
 dotenv.config();
@@ -28,6 +34,12 @@ app.get("/", (req, res) => {
 app.use("/products", productRoutes);
 app.use("/admins", authMiddleware(["admin"]), adminRoutes);
 app.use("/users", authMiddleware(["user"]), usersRoutes);
+app.use("/adverts", advertRoutes);
+app.use("/newsletter", newsletterRouter);
+app.use("/carts", cartRouter);
+app.use("/orders", orderRouter);
+app.use("/delivery-location", deliveryLocationRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 /* SERVER */
 const port = Number(process.env.PORT) || 3002;

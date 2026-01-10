@@ -13,6 +13,86 @@ export interface FiltersState {
     sort?: string;
     page?: number;
     pageSize?: number;
+    onlyFavorites?: boolean;
+}
+
+export interface CartItem {
+    productId: number;
+    quantity: number;
+    product?: {
+        id: number;
+        name: string;
+        price: any; // Decimal from Prisma
+        imageUrl: string | null;
+        discountPercent: number | null;
+    };
+}
+
+export interface UseCartReturn {
+    items: CartItem[];
+    count: number;
+    total: number;
+    isLoading: boolean;
+    addItem: (productId: number, quantity?: number) => Promise<void>;
+    updateQuantity: (productId: number, quantity: number) => Promise<void>;
+    removeItem: (productId: number) => Promise<void>;
+    clearCart: () => Promise<void>;
+}
+
+export interface Advert {
+    id: number;
+    title: string;
+    subtitle: string;
+    description?: string | null;
+    ctaText: string;
+    ctaLink: string;
+    backgroundColor: string;
+    textColor: string;
+    badge?: string | null;
+    badgeColor?: string | null;
+    discount?: string | null;
+    timerText?: string | null;
+}
+
+export type AdvertFull = {
+    id: number;
+    title: string;
+    subtitle: string;
+    description?: string | null;
+    ctaText: string;
+    ctaLink: string;
+
+    backgroundColor: string;
+    backgroundImage?: string | null;     // ← NEW
+    textColor: string;
+
+    badge?: string | null;
+    badgeColor?: string | null;
+    discount?: string | null;
+    timerText?: string | null;
+    price?: string | null;               // ← NEW
+    imageUrl?: string | null;            // ← NEW
+    secondaryLink?: string | null;       // ← NEW
+    features: string[];                  // ← NEW (always array)
+
+    displayDuration: number;
+    startsAt: string;
+    endsAt?: string | null;
+    priority: number;
+    isActive: boolean;
+
+    categories: Array<{
+        category: {
+            id: number;
+            name: string;
+            slug?: string;
+        };
+    }>;
+};
+
+export interface ProductDetailsResponse {
+    product: any;
+    relatedProducts: any[];
 }
 
 interface InitialStateTypes {

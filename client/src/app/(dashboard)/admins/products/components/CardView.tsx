@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, Edit, Trash2 } from "lucide-react";
+import { Package, Edit, Trash2, Star, Percent, Shield } from "lucide-react";
 import { Product } from "@/types/prismaTypes";
 
 type CardViewProps = {
@@ -27,10 +27,7 @@ export default function CardView({ products, onEdit, onDeleteClick }: CardViewPr
 
     const getRibbon = (product: Product) => {
         if (product.stock === 0) return { text: "Out of Stock", bg: "bg-red-600" };
-        if (product.stock > 0 && product.stock <= 5)
-            return { text: "Low Stock", bg: "bg-orange-500" };
-        // Placeholder — replace with real best-seller logic later
-        // if (product.isBestSeller) return { text: "Best Seller", bg: "bg-gradient-to-r from-purple-600 to-pink-600" };
+        if (product.stock > 0 && product.stock <= 5) return { text: "Low Stock", bg: "bg-orange-500" };
         return null;
     };
 
@@ -53,13 +50,27 @@ export default function CardView({ products, onEdit, onDeleteClick }: CardViewPr
             {products.map((product) => {
                 const ribbon = getRibbon(product);
 
-                // Properly type specs
+                // Specs
                 const specs: { key: string; value: string }[] = Array.isArray(product.specs)
                     ? product.specs
                     : [];
 
-                // Primary image: prefer imageUrls[0], fallback to imageUrl
+                // Primary image
                 const primaryImage = product.imageUrls?.[0] || product.imageUrl || null;
+
+                // Rating
+                const rating = product.averageRating
+                    ? (typeof product.averageRating === "object"
+                        ? product.averageRating.toNumber()
+                        : parseFloat(product.averageRating as any))
+                    : 0;
+                const reviewCount = product.reviewCount ?? 0;
+
+                // Discount
+                const discountPercent = product.discountPercent ?? 0;
+
+                // Warranty
+                const warranty = product.warranty || null;
 
                 return (
                     <Card
@@ -86,11 +97,7 @@ export default function CardView({ products, onEdit, onDeleteClick }: CardViewPr
                             {/* Ribbon */}
                             {ribbon && (
                                 <div
-                                    className={`absolute top-6 -left-8 w-40 ${ribbon.bg} text-white text-center text-xs font-bold py-2 transform rotate-[-45deg] shadow-lg
-                    before:absolute before:inset-0 before:-z-10 before:bg-inherit
-                    before:[clip-path:polygon(0_0,100%_0,100%_100%,0_100%,10%_50%)]
-                    after:absolute after:inset-0 after:-z-10 after:bg-inherit after:opacity-70
-                    after:[clip-path:polygon(0_50%,10%_0,20%_50%,10%_100%)]`}
+                                    className={`absolute top-6 -left-8 w-40 ${ribbon.bg} text-white text-center text-xs font-bold py-2 transform rotate-[-45deg] shadow-lg before:absolute before:inset-0 before:-z-10 before:bg-inherit before:[clip-path:polygon(0_0,100%_0,100%_100%,0_100%,10%_50%)] after:absolute after:inset-0 after:-z-10 after:bg-inherit after:opacity-70 after:[clip-path:polygon(0_50%,10%_0,20%_50%,10%_100%)]`}
                                 >
                                     {ribbon.text}
                                 </div>
@@ -106,7 +113,46 @@ export default function CardView({ products, onEdit, onDeleteClick }: CardViewPr
                                 {product.category?.name || "Uncategorized"}
                             </p>
 
-                            {/* Dynamic Specs as Badges */}
+                            {/* Rating */}
+                            {rating > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <div className="flex">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                className={`w-4 h-4 ${
+                                                    i < Math.floor(rating)
+                                                        ? "fill-yellow-400 text-yellow-400"
+                                                        : i < rating
+                                                            ? "fill-yellow-400/30 text-yellow-400"
+                                                            : "text-gray-300"
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                    <span className="text-sm text-gray-700">
+                    {rating.toFixed(1)} ({reviewCount.toLocaleString()})
+                  </span>
+                                </div>
+                            )}
+
+                            {/* Discount */}
+                            {discountPercent > 0 && (
+                                <Badge className="bg-red-100 text-red-700">
+                                    <Percent className="w-3 h-3 mr-1" />
+                                    Save {discountPercent}%
+                                </Badge>
+                            )}
+
+                            {/* Warranty */}
+                            {warranty && (
+                                <div className="flex items-center gap-2 text-sm text-gray-700">
+                                    <Shield className="w-4 h-4 text-blue-600" />
+                                    <span>{warranty}</span>
+                                </div>
+                            )}
+
+                            {/* Specs as Badges */}
                             {specs.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                     {specs.slice(0, 4).map((spec, index) => (
@@ -145,7 +191,8 @@ export default function CardView({ products, onEdit, onDeleteClick }: CardViewPr
 
                         <CardFooter className="p-4 pt-0 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button size="sm" onClick={(e) => handleEditClick(e, product.id)}>
-                                <Edit className="h-4 w-4 mr-1" /> Edit
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
                             </Button>
                             <Button
                                 size="sm"

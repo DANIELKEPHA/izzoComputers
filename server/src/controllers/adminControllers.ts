@@ -26,21 +26,16 @@ export const getAdmin = async (
   }
 };
 
-const LOG = console.log.bind(console, "[BACKEND]");
-
 export const createAdmin = async (req: Request, res: Response): Promise<void> => {
     try {
-        LOG("createAdmin request", req.body);
         const { cognitoId, name, email, phoneNumber } = req.body;
 
         const admin = await prisma.admin.create({
             data: { cognitoId, name, email, phoneNumber },
         });
 
-        LOG("Admin created in DB", admin);
         res.status(201).json(admin);
     } catch (error: any) {
-        LOG("createAdmin ERROR", error);
         res.status(500).json({ message: `Error creating admin: ${error.message}` });
     }
 };

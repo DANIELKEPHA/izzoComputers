@@ -13,15 +13,58 @@ import {
     useGetAuthUserQuery,
 } from "@/state/api";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+    CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, X, Package, DollarSign, Layers, Hash, Plus, Trash2, ArrowLeft } from "lucide-react";
+import {
+    Loader2,
+    Upload,
+    X,
+    Package,
+    DollarSign,
+    Layers,
+    Hash,
+    Plus,
+    Trash2,
+    ArrowLeft,
+    Star,
+    Percent,
+    Shield,
+} from "lucide-react";
 import { toast } from "sonner";
+
+// Realistic rating options (same as create form)
+const ratingOptions = [
+    { rating: 4.8, reviews: 1250, label: "4.8 ★★★★☆ (1,250 reviews)" },
+    { rating: 4.7, reviews: 980,  label: "4.7 ★★★★☆ (980 reviews)" },
+    { rating: 4.6, reviews: 750,  label: "4.6 ★★★★☆ (750 reviews)" },
+    { rating: 4.5, reviews: 520,  label: "4.5 ★★★★☆ (520 reviews)" },
+    { rating: 4.4, reviews: 380,  label: "4.4 ★★★★☆ (380 reviews)" },
+    { rating: 4.3, reviews: 210,  label: "4.3 ★★★★☆ (210 reviews)" },
+    { rating: 4.2, reviews: 150,  label: "4.2 ★★★★☆ (150 reviews)" },
+    { rating: 4.1, reviews: 90,   label: "4.1 ★★★★☆ (90 reviews)" },
+    { rating: 4.0, reviews: 60,   label: "4.0 ★★★★☆ (60 reviews)" },
+    { rating: 3.9, reviews: 45,   label: "3.9 ★★★☆☆ (45 reviews)" },
+    { rating: 3.5, reviews: 30,   label: "3.5 ★★★☆☆ (30 reviews)" },
+    { rating: null, reviews: 0,   label: "No rating yet" },
+];
 
 const productSchema = z.object({
     name: z.string().min(3, "Product name must be at least 3 characters"),
@@ -36,6 +79,10 @@ const productSchema = z.object({
 
 type ProductFormData = z.infer<typeof productSchema>;
 
+type EditProductFormProps = {
+    productId: number;
+};
+
 const categoryIcons: Record<string, string> = {
     Laptops: "💻",
     Desktops: "🖥️",
@@ -47,26 +94,20 @@ const categoryIcons: Record<string, string> = {
     Components: "🔧",
 };
 
-export default function EditProductPage() {
+export default function EditProductForm({ productId }: EditProductFormProps) {
     const router = useRouter();
-    const params = useParams();
-    const idParam = params.id as string | string[] | undefined;
 
-    // === ALL HOOKS CALLED UNCONDITIONALLY AT THE TOP ===
+    // Remove all useParams() logic — we now trust the productId prop
+    const isInvalidId = isNaN(productId);
+
     const { data: authUser } = useGetAuthUserQuery();
     const { data: categories = [] } = useGetCategoriesQuery();
 
-    // Validate idParam — but DO NOT return early yet
-    const isInvalidUrl = !idParam || Array.isArray(idParam);
-    const rawProductId = Array.isArray(idParam) ? idParam[0] : idParam;
-    const productId = rawProductId ? Number(rawProductId) : NaN;
-    const isInvalidId = isNaN(productId);
-
-    // Now call product-dependent hooks unconditionally
-    // If productId is invalid, RTK Query will just not fetch (or error internally — safe)
+    // Use the productId from props directly
     const { data: product, isLoading: productLoading } = useGetProductQuery(productId, {
-        skip: isInvalidUrl || isInvalidId,
+        skip: isInvalidId,
     });
+
     const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
 
     const [activeTab, setActiveTab] = useState("basic");
@@ -74,6 +115,11 @@ export default function EditProductPage() {
     const [newImages, setNewImages] = useState<File[]>([]);
     const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
     const [specs, setSpecs] = useState<{ key: string; value: string }[]>([]);
+
+    // Marketing fields
+    const [selectedRatingOption, setSelectedRatingOption] = useState<string>("");
+    const [discountPercent, setDiscountPercent] = useState<string>("");
+    const [warranty, setWarranty] = useState<string>("");
 
     const {
         control,
@@ -94,6 +140,7 @@ export default function EditProductPage() {
         },
     });
 
+    // Populate form and marketing fields when product loads
     useEffect(() => {
         if (product) {
             reset({
@@ -104,14 +151,34 @@ export default function EditProductPage() {
                 categoryId: product.categoryId,
             });
 
+            // Specs
             if (Array.isArray(product.specs) && product.specs.length > 0) {
                 setSpecs(product.specs.map((s: any) => ({ key: s.key, value: s.value })));
             } else {
                 setSpecs([]);
             }
 
+            // Images
             const images = product.imageUrls?.filter(Boolean) || (product.imageUrl ? [product.imageUrl] : []);
             setExistingImages(images);
+
+            // Rating & Reviews
+            if (product.averageRating !== null && product.reviewCount !== null) {
+                const matchingOption = ratingOptions.find(
+                    opt =>
+                        opt.rating === (typeof product.averageRating === "object" ? product.averageRating.toNumber() : parseFloat(product.averageRating)) &&
+                        opt.reviews === product.reviewCount
+                );
+                if (matchingOption) {
+                    setSelectedRatingOption(matchingOption.label);
+                }
+            } else {
+                setSelectedRatingOption("No rating yet");
+            }
+
+            // Discount & Warranty
+            setDiscountPercent(product.discountPercent?.toString() || "");
+            setWarranty(product.warranty || "");
         }
     }, [product, reset]);
 
@@ -122,17 +189,106 @@ export default function EditProductPage() {
         }
     }, [authUser, router]);
 
-    // === ALL HOOKS ARE NOW DONE ===
+    // Image handlers
+    const handleNewImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        const validFiles = files.filter((f) => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024);
 
-    // Early return screens — AFTER all hooks
-    if (isInvalidUrl) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-2xl text-red-600 font-medium">Invalid product URL</p>
-            </div>
-        );
-    }
+        if (validFiles.length === 0) {
+            toast.error("No valid images selected (max 10MB each)");
+            return;
+        }
 
+        const totalImages = existingImages.length + newImages.length + validFiles.length;
+        if (totalImages > 10) {
+            toast.error("Maximum 10 images allowed");
+            return;
+        }
+
+        setNewImages((prev) => [...prev, ...validFiles]);
+        validFiles.forEach((file) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setNewImagePreviews((prev) => [...prev, reader.result as string]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeExistingImage = (url: string) =>
+        setExistingImages((prev) => prev.filter((u) => u !== url));
+
+    const removeNewImage = (index: number) => {
+        setNewImages((prev) => prev.filter((_, i) => i !== index));
+        setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    // Specs handlers
+    const addSpec = () => setSpecs([...specs, { key: "", value: "" }]);
+
+    const updateSpec = (index: number, field: "key" | "value", value: string) => {
+        const updated = [...specs];
+        updated[index][field] = value;
+        setSpecs(updated);
+    };
+
+    const removeSpec = (index: number) => setSpecs(specs.filter((_, i) => i !== index));
+
+    const handleTabChange = async (value: string) => {
+        let valid = true;
+        if (activeTab === "basic") {
+            valid = await trigger(["name", "description", "categoryId"]);
+        } else if (activeTab === "details") {
+            valid = await trigger(["price", "stock"]);
+        }
+        if (valid) setActiveTab(value);
+    };
+
+    const onSubmit = async (data: ProductFormData) => {
+        try {
+            const selectedOption = ratingOptions.find(
+                (opt) => opt.label === selectedRatingOption
+            );
+
+            const validSpecs = specs
+                .map((s) => ({ key: s.key.trim(), value: s.value.trim() }))
+                .filter((s) => s.key && s.value);
+
+            await updateProduct({
+                productId,
+                ...data,
+                images: newImages.length > 0 ? newImages : undefined,
+                keepImageUrls: existingImages,
+                specs: validSpecs.length > 0 ? validSpecs : null,
+                averageRating: selectedOption?.rating ?? null,
+                reviewCount: selectedOption?.reviews ?? null,
+                discountPercent: discountPercent ? parseInt(discountPercent) : null,
+                warranty: warranty.trim() || null,
+            }).unwrap();
+
+            toast.success("Product updated successfully!");
+            router.push("/admins/products");
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Failed to update product");
+        }
+    };
+
+    const price = watch("price");
+    const stock = watch("stock");
+    const estimatedRevenue = parseFloat(price || "0") * Number(stock || 0);
+    const selectedCategoryId = watch("categoryId");
+    const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+    const primaryPreviewImage = newImagePreviews[0] || existingImages[0] || "/placeholder-laptop.jpg";
+
+    // For live preview
+    const currentRating = ratingOptions.find(
+        (opt) => opt.label === selectedRatingOption
+    )?.rating ?? 0;
+    const finalPreviewPrice = discountPercent
+        ? parseFloat(price || "0") * (1 - parseInt(discountPercent || "0", 10) / 100)
+        : parseFloat(price || "0");
+
+    // Early returns (loading / errors)
     if (isInvalidId) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -164,85 +320,6 @@ export default function EditProductPage() {
         );
     }
 
-    // Helper functions (unchanged)
-    const addSpec = () => setSpecs([...specs, { key: "", value: "" }]);
-
-    const updateSpec = (index: number, field: "key" | "value", value: string) => {
-        const updated = [...specs];
-        updated[index][field] = value;
-        setSpecs(updated);
-    };
-
-    const removeSpec = (index: number) => setSpecs(specs.filter((_, i) => i !== index));
-
-    const handleNewImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        const validFiles = files.filter((f) => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024);
-        if (validFiles.length === 0) {
-            toast.error("No valid images selected (max 10MB each)");
-            return;
-        }
-        const totalImages = existingImages.length + newImages.length + validFiles.length;
-        if (totalImages > 10) {
-            toast.error("Maximum 10 images allowed");
-            return;
-        }
-        setNewImages((prev) => [...prev, ...validFiles]);
-        validFiles.forEach((file) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setNewImagePreviews((prev) => [...prev, reader.result as string]);
-            };
-            reader.readAsDataURL(file);
-        });
-    };
-
-    const removeExistingImage = (url: string) => setExistingImages((prev) => prev.filter((u) => u !== url));
-
-    const removeNewImage = (index: number) => {
-        setNewImages((prev) => prev.filter((_, i) => i !== index));
-        setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    const handleTabChange = async (value: string) => {
-        let valid = true;
-        if (activeTab === "basic") {
-            valid = await trigger(["name", "description", "categoryId"]);
-        } else if (activeTab === "details") {
-            valid = await trigger(["price", "stock"]);
-        }
-        if (valid) setActiveTab(value);
-    };
-
-    const onSubmit = async (data: ProductFormData) => {
-        try {
-            const validSpecs = specs
-                .map((s) => ({ key: s.key.trim(), value: s.value.trim() }))
-                .filter((s) => s.key && s.value);
-
-            await updateProduct({
-                productId,
-                ...data,
-                images: newImages.length > 0 ? newImages : undefined,
-                keepImageUrls: existingImages,
-                specs: validSpecs.length > 0 ? validSpecs : null,
-            }).unwrap();
-
-            toast.success("Product updated successfully!");
-            router.push("/admins/products");
-        } catch (err: any) {
-            toast.error(err?.data?.message || "Failed to update product");
-        }
-    };
-
-    const price = watch("price");
-    const stock = watch("stock");
-    const estimatedRevenue = parseFloat(price || "0") * Number(stock || 0);
-    const selectedCategoryId = watch("categoryId");
-    const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
-    const primaryPreviewImage = newImagePreviews[0] || existingImages[0];
-
-    // Main UI
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -255,11 +332,17 @@ export default function EditProductPage() {
                             </Button>
                             <div>
                                 <h1 className="text-4xl font-bold text-gray-900">Edit Product</h1>
-                                <p className="text-lg text-gray-600 mt-2">Update product details, pricing, images, and specifications</p>
+                                <p className="text-lg text-gray-600 mt-2">
+                                    Update product details, pricing, images, and specifications
+                                </p>
                             </div>
                         </div>
                         <div className="flex gap-4">
-                            <Button variant="outline" size="lg" onClick={() => router.push("/admins/products")}>
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                onClick={() => router.push("/admins/products")}
+                            >
                                 Cancel
                             </Button>
                             <Button
@@ -289,19 +372,25 @@ export default function EditProductPage() {
                     <div className="lg:col-span-8">
                         <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden">
                             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 py-10 px-10">
-                                <CardTitle className="text-3xl font-bold text-gray-900">Product Information</CardTitle>
+                                <CardTitle className="text-3xl font-bold text-gray-900">
+                                    Product Information
+                                </CardTitle>
                                 <CardDescription className="text-lg mt-3 text-gray-700">
                                     Edit all product details in the tabs below
                                 </CardDescription>
                             </CardHeader>
+
                             <CardContent className="p-10">
                                 <Tabs value={activeTab} onValueChange={handleTabChange}>
-                                    <TabsList className="grid grid-cols-4 w-full mb-12 bg-gray-100 p-2 rounded-2xl">
+                                    <TabsList className="grid grid-cols-5 w-full mb-12 bg-gray-100 p-2 rounded-2xl">
                                         <TabsTrigger value="basic" className="rounded-xl py-4 text-base font-medium data-[state=active]:bg-white data-[state=active]:shadow-md">
                                             <Package className="w-5 h-5 mr-2" /> Basic Info
                                         </TabsTrigger>
                                         <TabsTrigger value="details" className="rounded-xl py-4 text-base font-medium data-[state=active]:bg-white data-[state=active]:shadow-md">
                                             <DollarSign className="w-5 h-5 mr-2" /> Pricing & Stock
+                                        </TabsTrigger>
+                                        <TabsTrigger value="marketing" className="rounded-xl py-4 text-base font-medium data-[state=active]:bg-white data-[state=active]:shadow-md">
+                                            <Star className="w-5 h-5 mr-2" /> Marketing
                                         </TabsTrigger>
                                         <TabsTrigger value="specs" className="rounded-xl py-4 text-base font-medium data-[state=active]:bg-white data-[state=active]:shadow-md">
                                             Specifications
@@ -418,6 +507,65 @@ export default function EditProductPage() {
                                         </Card>
                                     </TabsContent>
 
+                                    {/* Marketing Tab */}
+                                    <TabsContent value="marketing" className="space-y-8">
+                                        <div className="space-y-8 bg-gray-50/60 rounded-3xl p-8 border">
+                                            {/* Rating */}
+                                            <div className="space-y-3">
+                                                <Label className="text-lg font-medium flex items-center gap-3">
+                                                    <Star className="w-6 h-6 text-yellow-500" />
+                                                    Customer Rating & Reviews
+                                                </Label>
+                                                <Select value={selectedRatingOption} onValueChange={setSelectedRatingOption}>
+                                                    <SelectTrigger className="text-base py-6 rounded-xl">
+                                                        <SelectValue placeholder="Select rating..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {ratingOptions.map((opt) => (
+                                                            <SelectItem key={opt.label} value={opt.label}>
+                                                                {opt.label}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            {/* Discount */}
+                                            <div className="space-y-3">
+                                                <Label className="text-lg font-medium flex items-center gap-3">
+                                                    <Percent className="w-6 h-6 text-red-600" />
+                                                    Discount Percentage
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        min="0"
+                                                        max="100"
+                                                        value={discountPercent}
+                                                        onChange={(e) => setDiscountPercent(e.target.value)}
+                                                        placeholder="e.g., 15"
+                                                        className="pr-16 py-6 text-lg rounded-xl"
+                                                    />
+                                                    <span className="absolute right-6 top-1/2 -translate-y-1/2 text-xl text-gray-600">%</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Warranty */}
+                                            <div className="space-y-3">
+                                                <Label className="text-lg font-medium flex items-center gap-3">
+                                                    <Shield className="w-6 h-6 text-blue-600" />
+                                                    Warranty
+                                                </Label>
+                                                <Input
+                                                    value={warranty}
+                                                    onChange={(e) => setWarranty(e.target.value)}
+                                                    placeholder="e.g., 2-year warranty included"
+                                                    className="py-6 text-base rounded-xl"
+                                                />
+                                            </div>
+                                        </div>
+                                    </TabsContent>
+
                                     {/* Specifications */}
                                     <TabsContent value="specs" className="space-y-8">
                                         <div className="bg-gray-50 rounded-3xl p-10 border">
@@ -527,46 +675,85 @@ export default function EditProductPage() {
                         </Card>
                     </div>
 
-                    {/* Right Sidebar */}
+                    {/* Right Sidebar - Live Preview & Summary */}
                     <div className="lg:col-span-4 space-y-8">
                         {/* Live Preview */}
                         <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden">
                             <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 py-8">
                                 <CardTitle className="text-2xl font-bold">Live Preview</CardTitle>
-                                <CardDescription className="text-base mt-2">How customers will see this product</CardDescription>
+                                <CardDescription className="text-base mt-2">
+                                    How customers will see this product
+                                </CardDescription>
                             </CardHeader>
                             <CardContent className="p-0">
                                 <div className="relative h-96 bg-gray-100">
-                                    {primaryPreviewImage ? (
-                                        <Image src={primaryPreviewImage} alt="Product preview" fill className="object-cover" priority />
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center h-full">
-                                            <Package className="w-32 h-32 text-gray-300 mb-6" />
-                                            <p className="text-xl text-gray-500">No image available</p>
-                                        </div>
-                                    )}
+                                    <Image
+                                        src={primaryPreviewImage}
+                                        alt="Product preview"
+                                        fill
+                                        className="object-cover"
+                                        priority
+                                    />
                                 </div>
+
                                 <div className="p-8 space-y-6">
                                     <h3 className="text-2xl font-bold text-gray-900 line-clamp-2">
                                         {watch("name") || "Product Name"}
                                     </h3>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-3xl font-bold text-blue-600">
-                                            KES {watch("price") ? Number(watch("price")).toLocaleString("en-KE") : "0"}
-                                        </span>
-                                        <Badge className="text-lg px-5 py-2" variant={Number(stock) > 0 ? "default" : "secondary"}>
-                                            {Number(stock) > 0 ? `In Stock (${stock})` : "Out of Stock"}
-                                        </Badge>
+
+                                    <div className="flex items-baseline gap-4">
+                    <span className="text-3xl font-bold text-blue-600">
+                      KES {finalPreviewPrice.toLocaleString("en-KE")}
+                    </span>
+                                        {discountPercent && parseInt(discountPercent) > 0 && (
+                                            <>
+                        <span className="text-xl text-gray-500 line-through">
+                          KES {parseFloat(price || "0").toLocaleString("en-KE")}
+                        </span>
+                                                <Badge className="bg-red-100 text-red-700 text-lg px-4 py-2">
+                                                    Save {discountPercent}%
+                                                </Badge>
+                                            </>
+                                        )}
                                     </div>
+
+                                    {currentRating > 0 && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        className={`w-6 h-6 ${
+                                                            i < Math.floor(currentRating)
+                                                                ? "fill-yellow-400 text-yellow-400"
+                                                                : "text-gray-300"
+                                                        }`}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <span className="text-lg text-gray-700">{selectedRatingOption}</span>
+                                        </div>
+                                    )}
+
                                     <p className="text-gray-600 leading-relaxed line-clamp-4">
                                         {watch("description") || "No description provided yet."}
                                     </p>
+
+                                    {warranty && (
+                                        <div className="flex items-center gap-3 text-gray-700">
+                                            <Shield className="w-6 h-6" />
+                                            <span className="text-lg">{warranty}</span>
+                                        </div>
+                                    )}
+
                                     {selectedCategory && (
                                         <div className="flex items-center gap-4 pt-6 border-t">
-                                            <span className="text-3xl">{categoryIcons[selectedCategory.name] || "📦"}</span>
+                      <span className="text-4xl">
+                        {categoryIcons[selectedCategory.name] || "📦"}
+                      </span>
                                             <div>
                                                 <p className="text-sm text-gray-500">Category</p>
-                                                <p className="font-semibold text-lg">{selectedCategory.name}</p>
+                                                <p className="font-semibold text-xl">{selectedCategory.name}</p>
                                             </div>
                                         </div>
                                     )}
@@ -583,18 +770,38 @@ export default function EditProductPage() {
                                 <div className="space-y-6 text-lg">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Total Images</span>
-                                        <span className="font-semibold">{existingImages.length + newImages.length}/10</span>
+                                        <span className="font-semibold">
+                      {existingImages.length + newImages.length}/10
+                    </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Specifications</span>
-                                        <span className="font-semibold">{specs.filter((s) => s.key && s.value).length}</span>
+                                        <span className="font-semibold">
+                      {specs.filter((s) => s.key && s.value).length}
+                    </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Rating</span>
+                                        <span className="font-semibold">{selectedRatingOption || "Not set"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Discount</span>
+                                        <span className="font-semibold">
+                      {discountPercent ? `${discountPercent}%` : "None"}
+                    </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Warranty</span>
+                                        <span className="font-semibold">{warranty || "Not set"}</span>
                                     </div>
                                     <div className="pt-6 border-t">
                                         <div className="flex justify-between items-end">
-                                            <span className="text-gray-700 font-medium text-xl">Estimated Stock Value</span>
+                      <span className="text-gray-700 font-medium text-xl">
+                        Estimated Stock Value
+                      </span>
                                             <span className="font-bold text-3xl text-green-600">
-                                                KES {estimatedRevenue.toLocaleString("en-KE")}
-                                            </span>
+                        KES {estimatedRevenue.toLocaleString("en-KE")}
+                      </span>
                                         </div>
                                     </div>
                                 </div>
