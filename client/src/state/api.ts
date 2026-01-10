@@ -77,7 +77,6 @@ export const api = createApi({
                 }
             },
         }),
-
         // user related endpoints
         getUser: build.query<User, string>({
             query: (cognitoId) => `users/${cognitoId}`,
@@ -205,7 +204,6 @@ export const api = createApi({
                     ]
                     : [{ type: "Products", id: "LIST" }],
         }),
-
         // === CATEGORY ENDPOINTS
         createCategory: build.mutation<
             { id: number; name: string; slug: string; coverImageUrl: string | null },
@@ -754,16 +752,16 @@ export const api = createApi({
                 ctaText: string;
                 ctaLink: string;
                 backgroundColor: string;
-                backgroundImage?: string | null;     // ← NEW
+                backgroundImage?: string | null;
                 textColor: string;
                 badge?: string | null;
                 badgeColor?: string | null;
                 discount?: string | null;
                 timerText?: string | null;
-                price?: string | null;               // ← NEW
-                imageUrl?: string | null;            // ← NEW
-                secondaryLink?: string | null;       // ← NEW
-                features?: string[];                 // ← NEW
+                price?: string | null;
+                imageUrl?: string | null;
+                secondaryLink?: string | null;
+                features?: string[];
                 displayDuration?: number;
                 startsAt?: string;
                 endsAt?: string | null;

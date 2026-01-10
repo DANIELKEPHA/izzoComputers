@@ -79,12 +79,21 @@ export default function ProductDetailPage({
         );
     }
 
-    const imageUrls: string[] =
-        (product as any).imageUrls || (product.imageUrl ? [product.imageUrl] : []);
-    const images = imageUrls.filter(Boolean);
+    const prod = product?.product;
+
+    if (!prod) {
+        return <div>Product not found</div>;
+    }
+
+    const images = prod.imageUrls?.length
+        ? prod.imageUrls
+        : prod.imageUrl
+            ? [prod.imageUrl]
+            : [];
+
     const selectedImage = images[selectedImageIndex] || null;
 
-    const visibleThumbnails = images.slice(
+    const visibleThumbnails: string[] = images.slice(
         thumbnailStartIndex,
         thumbnailStartIndex + THUMBNAILS_PER_PAGE
     );
@@ -105,8 +114,8 @@ export default function ProductDetailPage({
         setSelectedImageIndex(index);
     };
 
-    const specs = Array.isArray(product.specs) ? product.specs : [];
-    const features = Array.isArray(product.features) ? product.features : [];
+    const specs = Array.isArray(prod?.specs) ? prod.specs : [];
+    const features = Array.isArray(prod?.features) ? prod.features : [];
 
     return (
         <div className="min-h-screen bg-white">
@@ -117,7 +126,7 @@ export default function ProductDetailPage({
                         items={[
                             { label: "Dashboard", href: "/admins" },
                             { label: "Products", href: "/admins/products" },
-                            { label: product.name },
+                            { label: prod.name },
                         ]}
                     />
                 </div>
@@ -208,7 +217,7 @@ export default function ProductDetailPage({
                                     <div className="relative aspect-[1/1]">
                                         <Image
                                             src={selectedImage}
-                                            alt={product.name}
+                                            alt={prod.name}
                                             fill
                                             sizes="(max-width: 640px) 90vw, 380px"
                                             className={`object-contain transition-transform duration-300 ${
@@ -240,7 +249,7 @@ export default function ProductDetailPage({
                     <div className="lg:col-span-7 sticky top-8 space-y-6 text-sm">
                         {/* Title */}
                         <h1 className="text-2xl lg:text-3xl font-semibold text-gray-900 leading-tight">
-                            {product.name}
+                            {prod.name}
                         </h1>
 
                         {/* Category & Rating */}
@@ -255,9 +264,9 @@ export default function ProductDetailPage({
                 128 ratings
               </span>
                             <div className="w-px h-4 bg-gray-300"></div>
-                            {product.category && (
+                            {prod.category && (
                                 <span className="text-xs text-blue-600 hover:underline cursor-pointer">
-                  Category: {product.category.name}
+                  Category: {prod.category.name}
                 </span>
                             )}
                         </div>
@@ -266,10 +275,10 @@ export default function ProductDetailPage({
                         <div className="pt-2">
                             <div className="flex items-baseline gap-2">
                 <span className="text-3xl lg:text-4xl font-bold text-gray-900">
-                  KES {Number(product.price).toLocaleString()}
+                  KES {Number(prod.price).toLocaleString()}
                 </span>
                                 <span className="text-sm text-gray-500 line-through">
-                  KES {(Number(product.price) * 1.2).toLocaleString()}
+                  KES {(Number(prod.price) * 1.2).toLocaleString()}
                 </span>
                                 <Badge variant="secondary" className="text-xs font-semibold px-2 py-0.5">
                                     20% off
@@ -281,13 +290,13 @@ export default function ProductDetailPage({
                         {/* Stock */}
                         <div className="pt-2">
                             <Badge
-                                variant={product.stock > 0 ? "default" : "destructive"}
+                                variant={prod.stock > 0 ? "default" : "destructive"}
                                 className="text-sm px-3 py-1 rounded-lg"
                             >
-                                {product.stock > 0 ? (
+                                {prod.stock > 0 ? (
                                     <div className="flex items-center gap-1.5">
                                         <Check className="h-4 w-4" />
-                                        <span>In Stock • {product.stock} units</span>
+                                        <span>In Stock • {prod.stock} units</span>
                                     </div>
                                 ) : (
                                     "Out of Stock"
@@ -321,11 +330,11 @@ export default function ProductDetailPage({
                         {/* Actions */}
                         <div className="border-t border-gray-200 pt-4">
                             <ProductActionsSidebar
-                                price={Number(product.price)}
-                                stock={product.stock}
+                                price={Number(prod.price)}
+                                stock={prod.stock}
                                 isAdmin={true}
                                 onEditClick={() =>
-                                    router.push(`/admins/products/edit/${product.id}`)
+                                    router.push(`/admins/products/edit/${prod.id}`)
                                 }
                             />
                         </div>
@@ -337,9 +346,9 @@ export default function ProductDetailPage({
                     {/* Description + Features */}
                     <div className="lg:col-span-7 space-y-6">
                         <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Description</h2>
-                        {product.description ? (
+                        {prod.description ? (
                             <div className="prose prose-sm max-w-none">
-                                <TruncatedDescription description={product.description} />
+                                <TruncatedDescription description={prod.description} />
                             </div>
                         ) : (
                             <p className="text-gray-500 italic text-sm">No description available.</p>
