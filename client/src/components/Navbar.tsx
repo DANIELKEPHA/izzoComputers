@@ -34,8 +34,6 @@ import {
 import SearchSuggestions from "@/app/(nondashboard)/shop/SearchSuggestions";
 import { useCart } from "@/hooks/useCart";
 import { Separator } from "./ui/separator";
-import DeliveryLocation from "@/components/DeliveryLocation";
-import DeliveryLocationDropdown from "@/components/DeliveryLocation";
 
 const Navbar = () => {
     const { data: authUser } = useGetAuthUserQuery();
