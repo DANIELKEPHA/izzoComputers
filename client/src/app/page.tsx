@@ -1,3 +1,5 @@
+'use client'
+
 import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Landing from "./(nondashboard)/landing/page";
