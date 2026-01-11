@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import AdvertForm from "@/app/(dashboard)/admins/promotion/new/page";
+import AdvertForm from "@/app/(dashboard)/admins/promotion/new/AdvertForm";
 
 const AdvertsPage: React.FC = () => {
     const {
