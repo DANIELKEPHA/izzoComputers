@@ -32,6 +32,7 @@ model User {
   newsletterSubscriptions NewsletterSubscriber[] @relation("UserNewsletter")
 
   deliveryLocation UserDeliveryLocation?
+  Review           Review[]
 
   @@index([cognitoId])
   @@map("users")
@@ -72,6 +73,7 @@ model Product {
   orderItems  OrderItem[]
   category    Category    @relation(fields: [categoryId], references: [id])
   favoritedBy User[]      @relation("UserFavorites")
+  Review      Review[]
 
   @@index([categoryId])
   @@index([slug])
@@ -260,6 +262,27 @@ model UserDeliveryLocation {
   town   Town   @relation(fields: [townId], references: [id])
 
   @@map("user_delivery_locations")
+}
+
+model Review {
+  id        Int    @id @default(autoincrement())
+  productId Int
+  userId    String
+
+  rating  Int
+  title   String?
+  comment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [cognitoId], onDelete: Cascade)
+
+  @@unique([productId, userId])
+  @@index([productId])
+  @@index([userId])
+  @@map("reviews")
 }
 
 /// PostGIS system table - don't modify

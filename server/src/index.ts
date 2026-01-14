@@ -14,6 +14,7 @@ import cartRouter from "./routes/cartRouter";
 import orderRouter from "./routes/orderRouter";
 import deliveryLocationRoutes from "./routes/deliveryLocationRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
+import reviewRoutes from "./routes/reviewRoutes";
 
 /* CONFIGURATIONS */
 dotenv.config();
@@ -40,7 +41,7 @@ app.use("/carts", cartRouter);
 app.use("/orders", orderRouter);
 app.use("/delivery-location", deliveryLocationRoutes);
 app.use("/dashboard", dashboardRoutes);
-
+app.use("/reviews", reviewRoutes);
 /* SERVER */
 const port = Number(process.env.PORT) || 3002;
 app.listen(port, "0.0.0.0", () => {
