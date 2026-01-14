@@ -109,7 +109,7 @@ const FeaturesSection = () => {
                         return (
                             <Link
                                 key={category.id}
-                                href={`/shop/category/${hrefSlug}`}
+                                href={`/shop/categories/${hrefSlug}`}
                                 className="group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 block h-64"
                             >
                                 {/* Background Image or Fallback */}

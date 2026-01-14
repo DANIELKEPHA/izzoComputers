@@ -32,12 +32,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
     useGetProductQuery,
     useAddToCartMutation,
-    useGetRelatedProductsQuery, // ← ADD THIS TO YOUR api slice
+    useGetRelatedProductsQuery,
+    useGetProductReviewsQuery,
 } from "@/state/api";
 
 import ProductCard from "@/components/Card";
 import { ProductDetailsResponse, ProductSpec } from "@/state";
 import BreadCrumb from "@/components/BreadCrumb";
+import {calculateRatingStats} from "@/lib/review-utils";
+import ReviewSection from "@/app/(nondashboard)/shop/products/reviews/ReviewSection";
 
 export default function ProductDetailPage() {
     const params = useParams();
@@ -69,6 +72,9 @@ export default function ProductDetailPage() {
         error: any;
     };
 
+    // Fetch reviews for stats
+    const { data: reviews = [] } = useGetProductReviewsQuery(productId);
+
     const product = productData?.product;
     const categoryId = product?.category?.id;
 
@@ -91,7 +97,7 @@ export default function ProductDetailPage() {
             page,
             pageSize: 8,
             inStock: "true",
-            excludeProductId: productId, // Optional – add backend support if desired
+            excludeProductId: productId,
         },
         {
             skip: !categoryId || page === 1 || !hasMore,
@@ -118,7 +124,14 @@ export default function ProductDetailPage() {
         }
     }, [paginatedData, page, relatedProducts.length]);
 
-    // Load more handler
+    // Calculate rating distribution
+    const { average } = calculateRatingStats(reviews);
+    const averageRating = product?.averageRating
+        ? (typeof product.averageRating === "number"
+            ? product.averageRating
+            : parseFloat(product.averageRating || "0"))
+        : average;
+
     const loadMoreProducts = () => {
         if (!isFetchingMore && hasMore) {
             setPage((prev) => prev + 1);
@@ -302,7 +315,7 @@ export default function ProductDetailPage() {
                                         <Star
                                             key={i}
                                             className={`w-5 h-5 ${
-                                                i < Math.floor(product.averageRating || 0)
+                                                i < Math.floor(averageRating || 0)
                                                     ? "fill-yellow-400 text-yellow-400"
                                                     : "text-gray-300"
                                             }`}
@@ -310,16 +323,14 @@ export default function ProductDetailPage() {
                                     ))}
                                 </div>
                                 <span className="text-blue-600 font-medium">
-                  {typeof product.averageRating === "number"
-                      ? product.averageRating.toFixed(1)
-                      : parseFloat(product.averageRating || "0").toFixed(1)}
-                </span>
+                                    {averageRating.toFixed(1)}
+                                </span>
                                 <Separator orientation="vertical" className="h-4" />
                                 <button
                                     onClick={() => document.getElementById("reviews")?.scrollIntoView()}
                                     className="text-blue-600 hover:underline"
                                 >
-                                    {product.reviewCount || 0} ratings
+                                    {product.reviewCount || reviews.length || 0} ratings
                                 </button>
                                 <Separator orientation="vertical" className="h-4" />
                                 <span className="text-gray-600">{product.soldCount || 0} sold</span>
@@ -327,9 +338,9 @@ export default function ProductDetailPage() {
 
                             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                                 <div className="flex items-baseline gap-3 mb-2">
-                  <span className="text-3xl font-bold text-gray-900">
-                    {formatPrice(hasDiscount ? discountedPrice : originalPrice)}
-                  </span>
+                                    <span className="text-3xl font-bold text-gray-900">
+                                        {formatPrice(hasDiscount ? discountedPrice : originalPrice)}
+                                    </span>
                                     {hasDiscount && (
                                         <>
                                             <span className="text-xl text-gray-500 line-through">{formatPrice(originalPrice)}</span>
@@ -452,13 +463,21 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-white rounded-lg shadow-sm mb-8">
+                <div className="bg-white rounded-lg shadow-sm mb-8 overflow-hidden">
                     <Tabs defaultValue="description" className="w-full">
-                        <TabsList className="w-full justify-start border-b rounded-none h-14 px-6">
-                            <TabsTrigger value="description">Description</TabsTrigger>
-                            <TabsTrigger value="specifications">Specifications</TabsTrigger>
-                            <TabsTrigger value="reviews" id="reviews">
-                                Reviews ({product.reviewCount || 0})
+                        <TabsList className="w-full justify-start border-b rounded-none h-14 px-6 bg-gray-50">
+                            <TabsTrigger value="description" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                Description
+                            </TabsTrigger>
+                            <TabsTrigger value="specifications" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                Specifications
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="reviews"
+                                id="reviews"
+                                className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                            >
+                                Reviews ({product.reviewCount || reviews.length || 0})
                             </TabsTrigger>
                         </TabsList>
 
@@ -527,43 +546,14 @@ export default function ProductDetailPage() {
                             </div>
                         </TabsContent>
 
-                        <TabsContent value="reviews" className="p-6">
-                            {product.reviewCount ? (
-                                <div className="space-y-6">
-                                    <div className="flex items-center gap-6">
-                                        <div className="text-center">
-                                            <div className="text-4xl font-bold text-gray-900">
-                                                {(typeof product.averageRating === "number"
-                                                        ? product.averageRating
-                                                        : parseFloat(product.averageRating || "0")
-                                                ).toFixed(1)}
-                                            </div>
-                                            <div className="flex items-center justify-center my-2">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        className={`w-5 h-5 ${
-                                                            i < Math.floor(product.averageRating || 0)
-                                                                ? "fill-yellow-400 text-yellow-400"
-                                                                : "text-gray-300"
-                                                        }`}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <p className="text-sm text-gray-600">{product.reviewCount} ratings</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-center py-8 border-t border-gray-200">
-                                        <p className="text-gray-600">Reviews will be displayed here</p>
-                                        <Button className="mt-4 bg-blue-600 hover:bg-blue-700">Write a Review</Button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-12">
-                                    <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Reviews Yet</h3>
-                                    <p className="text-gray-600 mb-6">Be the first to review this product!</p>
-                                    <Button className="bg-blue-600 hover:bg-blue-700">Write a Review</Button>
+                        <TabsContent value="reviews" className="p-0 border-0">
+                            {product && (
+                                <div className="p-6">
+                                    <ReviewSection
+                                        productId={product.id}
+                                        averageRating={averageRating}
+                                        reviewCount={product.reviewCount || reviews.length || 0}
+                                    />
                                 </div>
                             )}
                         </TabsContent>
@@ -633,18 +623,28 @@ export default function ProductDetailPage() {
                 <div className="flex items-center gap-3">
                     <div className="flex-1">
                         <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold text-gray-900">
-                {formatPrice(hasDiscount ? discountedPrice : originalPrice)}
-              </span>
+                            <span className="text-xl font-bold text-gray-900">
+                                {formatPrice(hasDiscount ? discountedPrice : originalPrice)}
+                            </span>
                             {hasDiscount && <span className="text-sm text-gray-500 line-through">{formatPrice(originalPrice)}</span>}
                         </div>
                         <p className="text-xs text-green-600">In Stock</p>
                     </div>
-                    <Button size="lg" className="flex-1 bg-[#FFD814] hover:bg-[#F7CA00] text-gray-900 font-semibold">
+                    <Button
+                        size="lg"
+                        className="flex-1 bg-[#FFD814] hover:bg-[#F7CA00] text-gray-900 font-semibold"
+                        onClick={handleAddToCart}
+                        disabled={isAdding || product.stock === 0}
+                    >
                         <ShoppingCart className="w-5 h-5 mr-2" />
-                        Add to Cart
+                        {isAdding ? "Adding..." : "Add to Cart"}
                     </Button>
-                    <Button size="lg" className="flex-1 bg-[#FFA41C] hover:bg-[#FA8900] text-gray-900 font-semibold">
+                    <Button
+                        size="lg"
+                        className="flex-1 bg-[#FFA41C] hover:bg-[#FA8900] text-gray-900 font-semibold"
+                        onClick={handleBuyNow}
+                        disabled={isAdding || product.stock === 0}
+                    >
                         Buy Now
                     </Button>
                 </div>

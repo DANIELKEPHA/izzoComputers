@@ -35,6 +35,8 @@ export const api = createApi({
         "Orders",
         "DeliveryLocation",
         'RelatedProducts',
+        "Review",
+        "ProductReviews",
     ],
     endpoints: (build) => ({
         getAuthUser: build.query<User, void>({
@@ -1055,6 +1057,50 @@ export const api = createApi({
                 });
             },
         }),
+
+        getProductReviews: build.query<any[], number>({
+            query: (productId) => `/reviews/product/${productId}`,
+            providesTags: ["ProductReviews"],
+        }),
+
+
+        getMyProductReview: build.query<
+            {
+                id: number;
+                rating: number;
+                title: string | null;
+                comment: string | null;
+                createdAt: string;
+            } | null,
+            number
+        >({
+            query: (productId) => `/reviews/my/${productId}`,
+            providesTags: (result, error, productId) => [
+                { type: "Review", id: "MY_REVIEW" },
+                { type: "ProductReviews", id: productId },
+            ],
+        }),
+
+        upsertReview: build.mutation<
+            { message: string; review: any },
+            { productId: number; rating: number; title?: string; comment?: string }
+        >({
+            query: (body) => ({
+                url: "/reviews",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: ["ProductReviews", "Products", "ProductDetails"],
+        }),
+
+        deleteMyReview: build.mutation<{ message: string }, number>({
+            query: (productId) => ({
+                url: `/reviews/${productId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["ProductReviews", "Products", "ProductDetails"],
+        }),
+
     }),
 });
 
@@ -1100,4 +1146,8 @@ export const {
     useGetMyDeliveryLocationQuery,
     useSaveMyDeliveryLocationMutation,
     useDeleteMyDeliveryLocationMutation,
+    useGetProductReviewsQuery,
+    useGetMyProductReviewQuery,
+    useUpsertReviewMutation,
+    useDeleteMyReviewMutation,
 } = api;
